@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/gauntface/hopin#readme",
   "dependencies": {
+    "chalk": "^1.1.3",
     "express": "^4.15.2",
     "fs-promise": "^2.0.0",
     "glob": "^7.1.1",
