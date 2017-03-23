@@ -4,7 +4,8 @@
   "description": "A node framework for building PWAs",
   "main": "src/index.js",
   "scripts": {
-    "test": "mocha ./test/node/*.js"
+    "lint": "eslint '.'",
+    "test": "npm run lint && mocha ./test/node/*.js"
   },
   "repository": {
     "type": "git",
@@ -32,6 +33,8 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "eslint": "^3.18.0",
+    "eslint-config-google": "^0.7.1",
     "mocha": "^3.2.0",
     "proxyquire": "^1.7.11"
   }
