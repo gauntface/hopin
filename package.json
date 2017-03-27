@@ -1,11 +1,12 @@
 {
   "name": "hopin",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "description": "A node framework for building PWAs",
   "main": "src/index.js",
   "scripts": {
     "lint": "eslint '.'",
-    "test": "npm run lint && mocha ./test/node/*.js"
+    "test": "npm run lint && mocha ./test/node/*.js",
+    "publish": "npm-publish-scripts publish-release"
   },
   "repository": {
     "type": "git",
