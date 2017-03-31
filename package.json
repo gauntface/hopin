@@ -1,6 +1,6 @@
 {
   "name": "hopin",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "A node framework for building PWAs",
   "main": "src/index.js",
   "scripts": {
@@ -34,9 +34,11 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "clear-require": "^2.0.0",
     "eslint": "^3.18.0",
     "eslint-config-google": "^0.7.1",
     "mocha": "^3.2.0",
+    "node-fetch": "^1.6.3",
     "proxyquire": "^1.7.11"
   }
 }

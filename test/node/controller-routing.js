@@ -1,7 +1,6 @@
 const path = require('path');
 const proxyquire = require('proxyquire').noCallThru();
-
-const HopinError = require('../../src/models/HopinError');
+const clearRequire = require('clear-require');
 
 describe('Controller Router.route()', function() {
   const exampleController = {
@@ -100,6 +99,10 @@ describe('Controller Router.route()', function() {
     exampleController.reset();
     homeController.reset();
     overrideController.reset();
+  });
+
+  afterEach(function() {
+    clearRequire.all();
   });
 
   it('should handle bad / non-url input', function() {
@@ -221,7 +224,9 @@ describe('Controller Router.route()', function() {
       try {
         const proxyInput = {};
         proxyInput[path.join(__dirname, 'config', 'routes.js')] = badInput;
+
         const BadRouter = proxyquire('../../src/controllers/Router', proxyInput);
+
         new BadRouter({
           relativePath: __dirname,
         });
@@ -230,6 +235,7 @@ describe('Controller Router.route()', function() {
         caughtError = err;
       }
 
+      const HopinError = require('../../src/models/HopinError');
       if (!(caughtError instanceof HopinError)) {
         throw caughtError;
       }

@@ -49,13 +49,11 @@ class Router {
 
   route(requestUrl, request) {
     const filteredUrl = this._handleCustomRoutes(requestUrl);
-
     const parsedUrl = parseUrl(filteredUrl);
 
     const controller = parsedUrl.controller || 'Home';
     const action = parsedUrl.action || 'index';
     const type = parsedUrl.type || 'html';
-
 
     return this._findController(controller)
     .then((matchingController) => {
@@ -71,7 +69,6 @@ class Router {
           return matchingController['index']({request, type});
         });
       }
-
       return matchingController[action]({request, type});
     })
     .then((controllerResponse) => {
@@ -167,7 +164,7 @@ class Router {
   }**/
 
   _addDefaultRoutes() {
-    this._expressRouter.all('/', (req, res, next) => {
+    this._expressRouter.all('*', (req, res, next) => {
       return this.route(req.url, req)
       .then((args) => {
         let contentPromise;
