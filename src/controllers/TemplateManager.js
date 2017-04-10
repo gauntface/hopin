@@ -34,16 +34,17 @@ class TemplateManager {
     });
   }
 
-  renderHTML(data) {
+  render(data) {
     if (!data || !data.shell) {
       throw new HopinError('shell-required');
     }
-    return this.render(
+    return this.renderTemplate(
       data.shell,
       data
     )
     .then((shellDetails) => {
-      const documentTemplatePath = 'documents/html.tmpl';
+      const documentTemplatePath = data.document ? data.document :
+        'documents/html.tmpl';
       return this.readTemplate(documentTemplatePath)
       .then((templateDetails) => {
         if (!templateDetails) {
@@ -101,7 +102,7 @@ class TemplateManager {
     });
   }
 
-  render(templatePath, data) {
+  renderTemplate(templatePath, data) {
     return this._renderSubViews(data)
     .then((subviews) => {
       return this.readTemplate(templatePath)
@@ -193,7 +194,7 @@ class TemplateManager {
 
     return Promise.all(
       data.views.map((viewInfo) => {
-        return this.render(viewInfo.templatePath, viewInfo.data);
+        return this.renderTemplate(viewInfo.templatePath, viewInfo.data);
       })
     );
   }
@@ -201,7 +202,7 @@ class TemplateManager {
   _getPartialDetails(templateDetails) {
     return Promise.all(
       templateDetails.partials.map((partialPath) => {
-        return this.render(partialPath)
+        return this.renderTemplate(partialPath)
         .then((partialDetails) => {
           partialDetails.path = partialPath;
           return partialDetails;

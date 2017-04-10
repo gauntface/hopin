@@ -101,7 +101,7 @@ describe('Template Manager', function() {
       relativePath: 'hi',
     });
     const templatePath = 'example/template/path';
-    return templateManager.render(templatePath)
+    return templateManager.renderTemplate(templatePath)
     .then((templateDetails) => {
       templateDetails.content.should.equal(EXAMPLE_TEMPLATE);
       templateDetails.styles.should.deep.equal([]);
@@ -130,7 +130,7 @@ describe('Template Manager', function() {
       relativePath: RELATIVE_PATH,
     });
 
-    return templateManager.render('example/main', {})
+    return templateManager.renderTemplate('example/main', {})
     .then((templateDetails) => {
       templateDetails.content.should.equal('Hello.Partial.Goodbye.');
       templateDetails.styles.should.deep.equal([
@@ -167,7 +167,7 @@ describe('Template Manager', function() {
       relativePath: TEMPLATE_PATH,
     });
 
-    return templateManager.render(PATH_1, {
+    return templateManager.renderTemplate(PATH_1, {
       views: [
         {
           templatePath: PATH_2,
@@ -209,7 +209,7 @@ describe('Template Manager', function() {
       relativePath: TEMPLATE_PATH,
     });
 
-    return templateManager.render(PATH_1, {
+    return templateManager.renderTemplate(PATH_1, {
       views: [
         {
           templatePath: PATH_2,
@@ -254,7 +254,7 @@ describe('Template Manager', function() {
       relativePath: TEMPLATE_PATH,
     });
 
-    return templateManager.render(PATH_1, {
+    return templateManager.renderTemplate(PATH_1, {
       views: [
         {
           templatePath: PATH_2,
@@ -309,7 +309,7 @@ describe('Template Manager', function() {
       relativePath: TEMPLATE_PATH,
     });
 
-    return templateManager.render(PATH_1, {
+    return templateManager.renderTemplate(PATH_1, {
       views: [
         {
           templatePath: PATH_2,
@@ -374,7 +374,7 @@ describe('Template Manager', function() {
       relativePath: TEMPLATE_PATH,
     });
 
-    return templateManager.render(PATH_1, {
+    return templateManager.renderTemplate(PATH_1, {
       views: [
         {
           templatePath: PATH_2,
@@ -437,7 +437,7 @@ describe('Template Manager', function() {
       relativePath: TEMPLATE_PATH,
     });
 
-    return templateManager.render(PATH_1, {
+    return templateManager.renderTemplate(PATH_1, {
       views: [
         {
           templatePath: PATH_2,
@@ -470,7 +470,7 @@ describe('Template Manager', function() {
       const templateManager = new TemplateManager({
         relativePath: '.',
       });
-      templateManager.renderHTML();
+      templateManager.render();
       throw new Error('Injected Error');
     } catch (err) {
       if (err.message.indexOf(errorCodes['shell-required'].message) !== 0) {
@@ -485,7 +485,7 @@ describe('Template Manager', function() {
       const templateManager = new TemplateManager({
         relativePath: '.',
       });
-      templateManager.renderHTML({});
+      templateManager.render({});
       throw new Error('Injected Error');
     } catch (err) {
       if (err.message.indexOf(errorCodes['shell-required'].message) !== 0) {
@@ -537,7 +537,7 @@ describe('Template Manager', function() {
     const templateManager = new TemplateManager({
       relativePath: TEMPLATE_PATH,
     });
-    return templateManager.renderHTML({
+    return templateManager.render({
       shell: SHELL_1,
       views: [
         {
@@ -592,7 +592,7 @@ describe('Template Manager', function() {
       relativePath: RELATIVE_PATH,
     });
 
-    return templateManager.render(PATH_1)
+    return templateManager.renderTemplate(PATH_1)
     .then((templateResult) => {
       templateResult.styles.should.deep.equal([]);
       templateResult.scripts.should.deep.equal([]);
@@ -600,8 +600,64 @@ describe('Template Manager', function() {
     });
   });
 
-  // TODO: Support changing the used document type -
-  // is document even right word?
+
+  it('should be render with custom html document', function() {
+    const TEMPLATE_PATH = 'tmpl-path';
+    const PATH_1 = 'example/path/1';
+    const SHELL_1 = 'shells/example/2';
+    const DOC_1 = 'documents/custom-example.tmpl';
+
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      'fs-promise': {
+        readFile: (fullPath) => {
+          const relPath = path.relative(TEMPLATE_PATH, fullPath);
+          switch(relPath) {
+            case path.join('templates', PATH_1): {
+              let content = `---\nscripts:\n - /scripts/1/example.js\nstyles:\n - /styles/1/example.css\n - /styles/1/example-inline.css\n---`;
+              content += 'Hello 1.';
+              return Promise.resolve(new Buffer(content + '{{content}}'));
+            }
+            case path.join('templates', SHELL_1): {
+              let content = `---\nscripts:\n - /scripts/2/example.js\nstyles:\n - /styles/2/example.css\n - /styles/2/example-inline.css\n---`;
+              content += 'Hello Shell. {{{content}}}';
+              return Promise.resolve(new Buffer(content));
+            }
+            case path.join('templates', DOC_1): {
+              let content = `---\nscripts:\n - /scripts/3/example.js\nstyles:\n - /styles/3/example.css\n - /styles/3/example-inline.css\n---{{#styles.inline}}{{{.}}}{{/styles.inline}}{{#styles.async}}{{{.}}}{{/styles.async}}{{#scripts}}{{{.}}}{{/scripts}}{{{content}}}`;
+              return Promise.resolve(new Buffer(content));
+            }
+            case 'static/styles/1/example-inline.css': {
+              return Promise.resolve(new Buffer('1/example-inline.css'));
+            }
+            case 'static/styles/2/example-inline.css': {
+              return Promise.resolve(new Buffer('2/example-inline.css'));
+            }
+            case 'static/styles/3/example-inline.css': {
+              return Promise.resolve(new Buffer('3/example-inline.css'));
+            }
+          }
+
+          return Promise.reject(new Error('Unknown template path: ' + fullPath));
+        },
+      },
+    });
+    const templateManager = new TemplateManager({
+      relativePath: TEMPLATE_PATH,
+    });
+    return templateManager.render({
+      document: DOC_1,
+      shell: SHELL_1,
+      views: [
+        {
+          templatePath: PATH_1,
+        },
+      ],
+    })
+    .then((templateResult) => {
+      templateResult.should.equal(`2/example-inline.css1/example-inline.css3/example-inline.css/styles/2/example.css/styles/1/example.css/styles/3/example.css/scripts/3/example.js/scripts/2/example.js/scripts/1/example.jsHello Shell. Hello 1.`);
+    });
+  });
+
   // TODO: Move controller tests to a utils/controller-mock-env.js
   // TODO: Move template tests to a utils/templates-mock-env.js-
 });

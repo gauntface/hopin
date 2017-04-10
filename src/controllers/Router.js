@@ -171,7 +171,7 @@ class Router {
         if (typeof args.controllerResponse === 'string') {
           contentPromise = Promise.resolve(args.controllerResponse);
         } else {
-          contentPromise = this._templateManager.renderHTML(
+          contentPromise = this._templateManager.render(
             args.controllerResponse
           );
         }

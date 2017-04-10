@@ -13,7 +13,7 @@ module.exports = {
     message: `No 'relativePath' defined in TemplateManager constructor.`,
   },
   'shell-required': {
-    message: `A shell value is a required parameter into renderHTML().`,
+    message: `A shell value is a required parameter into render().`,
   },
   'bad-config-routes': {
     message: `The config/routes.js file in your project MUST export an ` +
