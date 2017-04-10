@@ -188,6 +188,9 @@ class Router {
           case 'js':
             res.set('Content-Type', 'application/javascript');
             break;
+          case 'xml':
+            res.set('Content-Type', 'application/xml');
+            break;
           default:
             // NOOP
             break;
