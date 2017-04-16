@@ -1,6 +1,5 @@
 const path = require('path');
 const pathToRegex = require('path-to-regexp');
-const logHelper = require('./log-helper');
 
 module.exports = (urlInput) => {
   const parsedAsPath = path.parse(urlInput);
@@ -10,21 +9,7 @@ module.exports = (urlInput) => {
     parsedAsPath.ext = '';
     parsedAsPath.base = path.basename(parsedAsPath.base, extension);
     urlInput = path.format(parsedAsPath);
-
-    switch(extension) {
-      case '.html':
-        type = 'html';
-        break;
-      case '.json':
-        type = 'json';
-        break;
-      case '.js':
-        type = 'js';
-        break;
-      default:
-        logHelper.warn('Unknown route type: ' + extension);
-        break;
-    }
+    type = extension.substr(1);
   }
 
   const regexKeys = [];
