@@ -8,11 +8,18 @@ const HopinError = require('../models/HopinError');
 const parseUrl = require('../utils/parse-url');
 const toTitleCase = require('../utils/title-case');
 
+const DEFAULT_TYPES = {
+  js: 'application/javascript',
+  json: 'application/json',
+  xml: 'application/xml',
+};
+
 class Router {
   constructor({relativePath}) {
     this._relativePath = relativePath;
     this._templateManager = new TemplateManager({relativePath});
     this._customRoutes = this._getCustomRoutes(this._relativePath);
+    this._customTypes = this._getCustomTypes(this._relativePath);
 
     /* eslint-disable new-cap */
     this._expressRouter = express.Router();
@@ -22,18 +29,7 @@ class Router {
   }
 
   _getCustomRoutes(relativePath) {
-    let customRoutes = null;
-    try {
-      customRoutes = require(
-        path.join(relativePath, 'config', 'routes.js'));
-    } catch (err) {
-      customRoutes = {};
-    }
-
-    if (typeof customRoutes !== 'object' || customRoutes instanceof Array) {
-      throw new HopinError('bad-config-routes');
-    }
-
+    const customRoutes = this._getCustomConfig(relativePath, 'routes.js');
     Object.keys(customRoutes).forEach((routeKey) => {
       const controllerInfo = customRoutes[routeKey];
       if (typeof controllerInfo !== 'string') {
@@ -43,8 +39,27 @@ class Router {
         });
       }
     });
-
     return customRoutes;
+  }
+
+  _getCustomTypes(relativePath) {
+    return this._getCustomConfig(relativePath, 'types.js');
+  }
+
+  _getCustomConfig(relativePath, fileName) {
+    let configContents = null;
+    try {
+      configContents = require(
+        path.join(relativePath, 'config', fileName));
+    } catch (err) {
+      configContents = {};
+    }
+
+    if (typeof configContents !== 'object' || configContents instanceof Array) {
+      throw new HopinError('bad-config-routes');
+    }
+
+    return configContents;
   }
 
   route(requestUrl, request) {
@@ -179,21 +194,15 @@ class Router {
         return contentPromise.then((content) => {
           return {
             content,
-            type: args.responseInfo.type,
+            type: args.controllerResponse.type || args.responseInfo.type,
           };
         });
       })
       .then((renderedContent) => {
-        switch(renderedContent.type) {
-          case 'js':
-            res.set('Content-Type', 'application/javascript');
-            break;
-          case 'xml':
-            res.set('Content-Type', 'application/xml');
-            break;
-          default:
-            // NOOP
-            break;
+        if (this._customTypes[renderedContent.type]) {
+          res.set('Content-Type', this._customTypes[renderedContent.type]);
+        } else if (DEFAULT_TYPES[renderedContent.type]) {
+          res.set('Content-Type', DEFAULT_TYPES[renderedContent.type]);
         }
         res.send(renderedContent.content);
       })

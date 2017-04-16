@@ -473,25 +473,38 @@ describe('Template Manager', function() {
       templateManager.render();
       throw new Error('Injected Error');
     } catch (err) {
-      if (err.message.indexOf(errorCodes['shell-required'].message) !== 0) {
+      if (err.message.indexOf(errorCodes['render-data-required'].message) !== 0) {
         throw new Error('Unexpected error thrown: ' + err.message);
       }
     }
   });
 
-  it('should throw when rendering HTML without a shell', function() {
-    const TemplateManager = require('../../src/controllers/TemplateManager');
-    try {
-      const templateManager = new TemplateManager({
-        relativePath: '.',
-      });
-      templateManager.render({});
-      throw new Error('Injected Error');
-    } catch (err) {
-      if (err.message.indexOf(errorCodes['shell-required'].message) !== 0) {
-        throw new Error('Unexpected error thrown: ' + err.message);
-      }
-    }
+  it('should rendering HTML without any data', function() {
+    const TEMPLATE_PATH = 'tmpl-path';
+    const DOC_1 = 'documents/html.tmpl';
+
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      'fs-promise': {
+        readFile: (fullPath) => {
+          const relPath = path.relative(TEMPLATE_PATH, fullPath);
+          switch(relPath) {
+            case path.join('templates', DOC_1): {
+              let content = `DocumentTemplate.{{{content}}}`;
+              return Promise.resolve(new Buffer(content));
+            }
+          }
+
+          return Promise.reject(new Error('Unknown template path: ' + fullPath));
+        },
+      },
+    });
+    const templateManager = new TemplateManager({
+      relativePath: TEMPLATE_PATH,
+    });
+    return templateManager.render({})
+    .then((templateResult) => {
+      templateResult.should.equal(`DocumentTemplate.`);
+    });
   });
 
   it('should render HTML with a shell', function() {

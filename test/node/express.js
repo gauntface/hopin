@@ -17,6 +17,13 @@ const testRoute = (route, expectedText) => {
   });
 };
 
+const testContentType = (route, expectedType) => {
+  return fetch(route)
+  .then((result) => {
+    result.headers.get('Content-Type').indexOf(expectedType).should.equal(0);
+  });
+};
+
 describe('Test Express Usage', function() {
   it('should pass calls to router', function() {
     const Hopin = require('../../src/index');
@@ -32,6 +39,15 @@ describe('Test Express Usage', function() {
       })
       .then(() => {
         return testRoute(`${serverUrl}/test/action`, 'basic-example:test:action');
+      })
+      .then(() => {
+        return testContentType(`${serverUrl}/contenttype/`, 'text/html');
+      })
+      .then(() => {
+        return testContentType(`${serverUrl}/contenttype/json`, 'application/json');
+      })
+      .then(() => {
+        return testContentType(`${serverUrl}/contenttype/custom`, 'text/madeup');
       });
     });
   });

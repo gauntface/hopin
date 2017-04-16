@@ -35,13 +35,19 @@ class TemplateManager {
   }
 
   render(data) {
-    if (!data || !data.shell) {
-      throw new HopinError('shell-required');
+    if (!data) {
+      throw new HopinError('render-data-required');
     }
-    return this.renderTemplate(
-      data.shell,
-      data
-    )
+    const shellResult = data;
+    let shellPromise = Promise.resolve(shellResult);
+    if (data && data.shell) {
+      shellPromise = this.renderTemplate(
+        data.shell,
+        data
+      );
+    }
+
+    return shellPromise
     .then((shellDetails) => {
       const documentTemplatePath = data.document ? data.document :
         'documents/html.tmpl';
@@ -55,14 +61,16 @@ class TemplateManager {
           inline: [],
           async: [],
         };
-        shellDetails.styles.forEach((stylesheet) => {
-          const stylesheetPath = path.parse(stylesheet);
-          if (stylesheetPath.name.endsWith('-inline')) {
-            seperatedStyles.inline.push(stylesheet);
-          } else {
-            seperatedStyles.async.push(stylesheet);
-          }
-        });
+        if (shellDetails.styles) {
+          shellDetails.styles.forEach((stylesheet) => {
+            const stylesheetPath = path.parse(stylesheet);
+            if (stylesheetPath.name.endsWith('-inline')) {
+              seperatedStyles.inline.push(stylesheet);
+            } else {
+              seperatedStyles.async.push(stylesheet);
+            }
+          });
+        }
         templateDetails.styles.forEach((stylesheet) => {
           const stylesheetPath = path.parse(stylesheet);
           if (stylesheetPath.name.endsWith('-inline')) {
