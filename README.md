@@ -15,3 +15,15 @@
 </p>
 
 Personal Express framework for building https://gauntface.com/
+
+## File Structure
+
+- .
+    - config/
+        - types.js
+        - routes.js
+    - controllers/
+        - <Path Name>Controller.js
+    - templates/
+        - documents/
+            - html.tmpl
