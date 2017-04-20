@@ -38,8 +38,8 @@ class TemplateManager {
     if (!data) {
       throw new HopinError('render-data-required');
     }
-    const shellResult = data;
-    let shellPromise = Promise.resolve(shellResult);
+
+    let shellPromise = Promise.resolve({});
     if (data && data.shell) {
       shellPromise = this.renderTemplate(
         data.shell,
@@ -61,6 +61,16 @@ class TemplateManager {
           inline: [],
           async: [],
         };
+        if (data.styles) {
+          data.styles.forEach((stylesheet) => {
+            const stylesheetPath = path.parse(stylesheet);
+            if (stylesheetPath.name.endsWith('-inline')) {
+              seperatedStyles.inline.push(stylesheet);
+            } else {
+              seperatedStyles.async.push(stylesheet);
+            }
+          });
+        }
         if (shellDetails.styles) {
           shellDetails.styles.forEach((stylesheet) => {
             const stylesheetPath = path.parse(stylesheet);
@@ -95,7 +105,9 @@ class TemplateManager {
         });
       })
       .then(({templateDetails, asyncStyles, inlineStyles}) => {
-        const allScripts = templateDetails.scripts.concat(shellDetails.scripts);
+        const allScripts = templateDetails.scripts
+          .concat(shellDetails.scripts)
+          .concat(data.scripts);
         return mustache.render(
           templateDetails.content, {
             data,

@@ -563,6 +563,65 @@ describe('Template Manager', function() {
     });
   });
 
+  it('should render HTML with additional styles and scripts', function() {
+    const TEMPLATE_PATH = 'tmpl-path';
+    const PATH_1 = 'example/path/1';
+    const DOC_1 = 'documents/html.tmpl';
+
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      'fs-promise': {
+        readFile: (fullPath) => {
+          const relPath = path.relative(TEMPLATE_PATH, fullPath);
+          switch(relPath) {
+            case path.join('templates', PATH_1): {
+              let content = ``;
+              content += 'Hello 1.';
+              return Promise.resolve(new Buffer(content + '{{content}}'));
+            }
+            case path.join('templates', DOC_1): {
+              let content = `---\nscripts:\n - /scripts/3/example.js\nstyles:\n - /styles/3/example.css\n - /styles/3/example-inline.css\n---{{#styles.inline}}{{{.}}}{{/styles.inline}}{{#styles.async}}{{{.}}}{{/styles.async}}{{#scripts}}{{{.}}}{{/scripts}}{{{content}}}`;
+              return Promise.resolve(new Buffer(content));
+            }
+            case 'static/styles/1/example-inline.css': {
+              return Promise.resolve(new Buffer('1/example-inline.css'));
+            }
+            case 'static/styles/2/example-inline.css': {
+              return Promise.resolve(new Buffer('2/example-inline.css'));
+            }
+            case 'static/styles/3/example-inline.css': {
+              return Promise.resolve(new Buffer('3/example-inline.css'));
+            }
+          }
+
+          return Promise.reject(new Error('Unknown template path: ' + fullPath));
+        },
+      },
+    });
+    const templateManager = new TemplateManager({
+      relativePath: TEMPLATE_PATH,
+    });
+    return templateManager.render({
+      styles: [
+        '/styles/1/example-inline.css',
+        '/styles/1/example.css',
+        '/styles/2/example-inline.css',
+        '/styles/2/example.css',
+      ],
+      scrtips: [
+        '/scripts/1/example.js',
+        '/scripts/2/example.js',
+      ],
+      views: [
+        {
+          templatePath: PATH_1,
+        },
+      ],
+    })
+    .then((templateResult) => {
+      templateResult.should.equal(`2/example-inline.css1/example-inline.css3/example-inline.css/styles/2/example.css/styles/1/example.css/styles/3/example.css/scripts/3/example.js/scripts/2/example.js/scripts/1/example.jsHello Shell. Hello 1.`);
+    });
+  });
+
   it('should be able to load a static file', function() {
     const RELATIVE_PATH = 'rel-path';
     const PATH_1 = 'example/path/1';
