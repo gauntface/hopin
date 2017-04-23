@@ -4,6 +4,8 @@ const mustache = require('mustache');
 const yamlFront = require('yaml-front-matter');
 const glob = require('glob');
 
+const View = require('../models/View');
+const ViewGroup = require('../models/ViewGroup');
 const HopinError = require('../models/HopinError');
 
 class TemplateManager {
@@ -39,7 +41,35 @@ class TemplateManager {
       throw new HopinError('render-data-required');
     }
 
-    let shellPromise = Promise.resolve({});
+    /* eslint-disable no-console */
+    console.log(JSON.stringify(data));
+
+    const documentName = data.document || null;
+    const shellName = data.shell || null;
+    const viewObjects = data.views || [];
+
+    console.log('Document: ', documentName);
+    console.log('Shell: ', shellName);
+    console.log('viewObjects: ', viewObjects);
+    console.log('...............................');
+
+    const parsedViews = viewObjects.map((viewObj) => {
+      return new View(viewObj);
+    });
+
+    const shellViewGroup = new ViewGroup({
+      templatePath: shellName,
+      views: parsedViews,
+    });
+
+    const documentViewGroup = new ViewGroup({
+      templatePath: documentName,
+      views: [shellViewGroup],
+    });
+
+    return documentViewGroup.render();
+
+    /** let shellPromise = Promise.resolve({});
     if (data && data.shell) {
       shellPromise = this.renderTemplate(
         data.shell,
@@ -119,7 +149,7 @@ class TemplateManager {
             scripts: allScripts,
           });
       });
-    });
+    });**/
   }
 
   renderTemplate(templatePath, data) {

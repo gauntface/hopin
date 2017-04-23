@@ -20,95 +20,6 @@ describe('Template Manager', function() {
     }
   });
 
-  it('should read template and return its contents', function() {
-    const EXAMPLE_TEMPLATE = 'Hello.';
-    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
-      'fs-promise': {
-        readFile: (path) => {
-          return Promise.resolve(new Buffer(EXAMPLE_TEMPLATE));
-        },
-      },
-    });
-    const templateManager = new TemplateManager({
-      relativePath: 'hi',
-    });
-    const templatePath = 'example/template/path';
-    return templateManager.readTemplate(templatePath)
-    .then((templateDetails) => {
-      templateDetails.path.should.equal(templatePath);
-      templateDetails.content.should.equal(EXAMPLE_TEMPLATE);
-      templateDetails.styles.should.deep.equal([]);
-      templateDetails.scripts.should.deep.equal([]);
-    });
-  });
-
-  it('should remove yaml frontmatter', function() {
-    const FRONT_MATTER = '---\ntest: yaml\n---';
-    const EXAMPLE_TEMPLATE = 'Hello.';
-    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
-      'fs-promise': {
-        readFile: (path) => {
-          return Promise.resolve(new Buffer(FRONT_MATTER + EXAMPLE_TEMPLATE));
-        },
-      },
-    });
-    const templateManager = new TemplateManager({
-      relativePath: 'hi',
-    });
-    const templatePath = 'example/template/path';
-    return templateManager.readTemplate(templatePath)
-    .then((templateDetails) => {
-      templateDetails.path.should.equal(templatePath);
-      templateDetails.content.should.equal(EXAMPLE_TEMPLATE);
-      templateDetails.styles.should.deep.equal([]);
-      templateDetails.scripts.should.deep.equal([]);
-    });
-  });
-
-  it('should provide styles and scripts from front matter', function() {
-    const FRONT_MATTER = '---\nscripts:\n - /scripts/example.js\nstyles:\n - /styles/example.css\n---';
-    const EXAMPLE_TEMPLATE = 'Hello.';
-    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
-      'fs-promise': {
-        readFile: (path) => {
-          return Promise.resolve(new Buffer(FRONT_MATTER + EXAMPLE_TEMPLATE));
-        },
-      },
-    });
-    const templateManager = new TemplateManager({
-      relativePath: 'hi',
-    });
-    const templatePath = 'example/template/path';
-    return templateManager.readTemplate(templatePath)
-    .then((templateDetails) => {
-      templateDetails.path.should.equal(templatePath);
-      templateDetails.content.should.equal(EXAMPLE_TEMPLATE);
-      templateDetails.styles.should.deep.equal(['/styles/example.css']);
-      templateDetails.scripts.should.deep.equal(['/scripts/example.js']);
-    });
-  });
-
-  it('should be able to render a basic view', function() {
-    const EXAMPLE_TEMPLATE = 'Hello.';
-    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
-      'fs-promise': {
-        readFile: (path) => {
-          return Promise.resolve(new Buffer(EXAMPLE_TEMPLATE));
-        },
-      },
-    });
-    const templateManager = new TemplateManager({
-      relativePath: 'hi',
-    });
-    const templatePath = 'example/template/path';
-    return templateManager.renderTemplate(templatePath)
-    .then((templateDetails) => {
-      templateDetails.content.should.equal(EXAMPLE_TEMPLATE);
-      templateDetails.styles.should.deep.equal([]);
-      templateDetails.scripts.should.deep.equal([]);
-    });
-  });
-
   it('should be able to render a view that has a partial', function() {
     const RELATIVE_PATH = 'rel-path';
     const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
@@ -479,7 +390,7 @@ describe('Template Manager', function() {
     }
   });
 
-  it('should rendering HTML without any data', function() {
+  it('should render HTML without any data', function() {
     const TEMPLATE_PATH = 'tmpl-path';
     const DOC_1 = 'documents/html.tmpl';
 
