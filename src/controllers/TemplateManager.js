@@ -8,6 +8,8 @@ const View = require('../models/View');
 const ViewGroup = require('../models/ViewGroup');
 const HopinError = require('../models/HopinError');
 
+const DEFAULT_DOCUMENT = 'documents/html.tmpl';
+
 class TemplateManager {
   constructor({relativePath}) {
     if (!relativePath) {
@@ -41,29 +43,27 @@ class TemplateManager {
       throw new HopinError('render-data-required');
     }
 
-    /* eslint-disable no-console */
-    console.log(JSON.stringify(data));
-
-    const documentName = data.document || null;
-    const shellName = data.shell || null;
+    const documentName = path.join(this._templatePath,
+      (data.document || DEFAULT_DOCUMENT));
+    const shellName = data.shell ?
+      path.join(this._templatePath, data.shell) : null;
     const viewObjects = data.views || [];
 
-    console.log('Document: ', documentName);
-    console.log('Shell: ', shellName);
-    console.log('viewObjects: ', viewObjects);
-    console.log('...............................');
-
     const parsedViews = viewObjects.map((viewObj) => {
+      viewObj.templatePath = path.join(
+        this._templatePath, viewObj.templatePath);
+      viewObj.staticPath = this._staticPath;
       return new View(viewObj);
     });
-
     const shellViewGroup = new ViewGroup({
       templatePath: shellName,
+      staticPath: this._staticPath,
       views: parsedViews,
     });
 
     const documentViewGroup = new ViewGroup({
       templatePath: documentName,
+      staticPath: this._staticPath,
       views: [shellViewGroup],
     });
 

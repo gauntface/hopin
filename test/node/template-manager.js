@@ -394,7 +394,7 @@ describe('Template Manager', function() {
     const TEMPLATE_PATH = 'tmpl-path';
     const DOC_1 = 'documents/html.tmpl';
 
-    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+    const View = proxyquire('../../src/models/View', {
       'fs-promise': {
         readFile: (fullPath) => {
           const relPath = path.relative(TEMPLATE_PATH, fullPath);
@@ -409,6 +409,13 @@ describe('Template Manager', function() {
         },
       },
     });
+    const ViewGroup = proxyquire('../../src/models/ViewGroup', {
+      './View': View,
+    });
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      '../models/View': View,
+      '../models/ViewGroup': ViewGroup,
+    });
     const templateManager = new TemplateManager({
       relativePath: TEMPLATE_PATH,
     });
@@ -418,45 +425,84 @@ describe('Template Manager', function() {
     });
   });
 
-  it('should render HTML with a shell', function() {
+  it('should render HTML with a basic shell', function() {
     const TEMPLATE_PATH = 'tmpl-path';
-    const PATH_1 = 'example/path/1';
     const SHELL_1 = 'shells/example/2';
     const DOC_1 = 'documents/html.tmpl';
 
-    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+    const View = proxyquire('../../src/models/View', {
       'fs-promise': {
         readFile: (fullPath) => {
           const relPath = path.relative(TEMPLATE_PATH, fullPath);
           switch(relPath) {
-            case path.join('templates', PATH_1): {
-              let content = `---\nscripts:\n - /scripts/1/example.js\nstyles:\n - /styles/1/example.css\n - /styles/1/example-inline.css\n---`;
-              content += 'Hello 1.';
-              return Promise.resolve(new Buffer(content + '{{content}}'));
-            }
             case path.join('templates', SHELL_1): {
-              let content = `---\nscripts:\n - /scripts/2/example.js\nstyles:\n - /styles/2/example.css\n - /styles/2/example-inline.css\n---`;
-              content += 'Hello Shell. {{{content}}}';
+              const content = `Hello Shell. {{{content}}}`;
               return Promise.resolve(new Buffer(content));
             }
             case path.join('templates', DOC_1): {
-              let content = `---\nscripts:\n - /scripts/3/example.js\nstyles:\n - /styles/3/example.css\n - /styles/3/example-inline.css\n---{{#styles.inline}}{{{.}}}{{/styles.inline}}{{#styles.async}}{{{.}}}{{/styles.async}}{{#scripts}}{{{.}}}{{/scripts}}{{{content}}}`;
+              const content = `Hello Document. {{{content}}}`;
               return Promise.resolve(new Buffer(content));
-            }
-            case 'static/styles/1/example-inline.css': {
-              return Promise.resolve(new Buffer('1/example-inline.css'));
-            }
-            case 'static/styles/2/example-inline.css': {
-              return Promise.resolve(new Buffer('2/example-inline.css'));
-            }
-            case 'static/styles/3/example-inline.css': {
-              return Promise.resolve(new Buffer('3/example-inline.css'));
             }
           }
 
           return Promise.reject(new Error('Unknown template path: ' + fullPath));
         },
       },
+    });
+    const ViewGroup = proxyquire('../../src/models/ViewGroup', {
+      './View': View,
+    });
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      '../models/View': View,
+      '../models/ViewGroup': ViewGroup,
+    });
+    const templateManager = new TemplateManager({
+      relativePath: TEMPLATE_PATH,
+    });
+    return templateManager.render({
+      shell: SHELL_1,
+      views: [],
+    })
+    .then((templateResult) => {
+      templateResult.should.equal(`Hello Document. Hello Shell. `);
+    });
+  });
+
+  it('should render HTML with a shell and sub view', function() {
+    const TEMPLATE_PATH = 'tmpl-path';
+    const PATH_1 = 'example/path/1';
+    const SHELL_1 = 'shells/example/2';
+    const DOC_1 = 'documents/html.tmpl';
+
+    const View = proxyquire('../../src/models/View', {
+      'fs-promise': {
+        readFile: (fullPath) => {
+          const relPath = path.relative(TEMPLATE_PATH, fullPath);
+          switch(relPath) {
+            case path.join('templates', PATH_1): {
+              let content = `Hello View.`;
+              return Promise.resolve(new Buffer(content + '{{content}}'));
+            }
+            case path.join('templates', SHELL_1): {
+              let content = `Hello Shell. {{{content}}}`;
+              return Promise.resolve(new Buffer(content));
+            }
+            case path.join('templates', DOC_1): {
+              let content = `Hello Document. {{{content}}}`;
+              return Promise.resolve(new Buffer(content));
+            }
+          }
+
+          return Promise.reject(new Error('Unknown template path: ' + fullPath));
+        },
+      },
+    });
+    const ViewGroup = proxyquire('../../src/models/ViewGroup', {
+      './View': View,
+    });
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      '../models/View': View,
+      '../models/ViewGroup': ViewGroup,
     });
     const templateManager = new TemplateManager({
       relativePath: TEMPLATE_PATH,
@@ -470,7 +516,88 @@ describe('Template Manager', function() {
       ],
     })
     .then((templateResult) => {
-      templateResult.should.equal(`2/example-inline.css1/example-inline.css3/example-inline.css/styles/2/example.css/styles/1/example.css/styles/3/example.css/scripts/3/example.js/scripts/2/example.js/scripts/1/example.jsHello Shell. Hello 1.`);
+      templateResult.should.equal(`Hello Document. Hello Shell. Hello View.`);
+    });
+  });
+
+  it('should render HTML with a shell with styles and scripts', function() {
+    const TEMPLATE_PATH = 'tmpl-path';
+    const PATH_1 = 'example/path/1';
+    const SHELL_1 = 'shells/example/2';
+    const DOC_1 = 'documents/html.tmpl';
+
+    const getFrontMatter = (name) => {
+      return `---\nscripts:\n - /scripts/${name}/example.js\n - /scripts/${name}/example-sync.js\nstyles:\n - /styles/${name}/example.css\n - /styles/${name}/example-inline.css\n---`;
+    };
+
+    const View = proxyquire('../../src/models/View', {
+      'fs-promise': {
+        readFile: (fullPath) => {
+          const relPath = path.relative(TEMPLATE_PATH, fullPath);
+          switch(relPath) {
+            case path.join('templates', PATH_1): {
+              let content = getFrontMatter('view');
+              content += 'Hello 1.';
+              return Promise.resolve(new Buffer(content + '{{content}}'));
+            }
+            case path.join('templates', SHELL_1): {
+              let content = getFrontMatter('shell');
+              content += 'Hello Shell. {{{content}}}';
+              return Promise.resolve(new Buffer(content));
+            }
+            case path.join('templates', DOC_1): {
+              let content = `${getFrontMatter('document')}\n{{#styles.inline}}{{{.}}}\n{{/styles.inline}}{{#styles.remote}}{{{.}}}\n{{/styles.remote}}{{#scripts.async}}{{{.}}}\n{{/scripts.async}}{{#scripts.sync}}{{{.}}}\n{{/scripts.sync}}Hello Document. {{{content}}}`;
+              return Promise.resolve(new Buffer(content));
+            }
+            // TODO: Make inline
+            case 'static/styles/view/example-inline.css': {
+              return Promise.resolve(new Buffer('view-css-here'));
+            }
+            case 'static/styles/shell/example-inline.css': {
+              return Promise.resolve(new Buffer('shell-css-here'));
+            }
+            case 'static/styles/document/example-inline.css': {
+              return Promise.resolve(new Buffer('document-css-here'));
+            }
+          }
+
+          return Promise.reject(new Error('Unknown template path: ' + fullPath));
+        },
+      },
+    });
+    const ViewGroup = proxyquire('../../src/models/ViewGroup', {
+      './View': View,
+    });
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      '../models/View': View,
+      '../models/ViewGroup': ViewGroup,
+    });
+    const templateManager = new TemplateManager({
+      relativePath: TEMPLATE_PATH,
+    });
+    return templateManager.render({
+      shell: SHELL_1,
+      views: [
+        {
+          templatePath: PATH_1,
+        },
+      ],
+    })
+    .then((templateResult) => {
+      templateResult.should.equal(`
+document-css-here
+shell-css-here
+view-css-here
+/styles/document/example.css
+/styles/shell/example.css
+/styles/view/example.css
+/scripts/document/example.js
+/scripts/shell/example.js
+/scripts/view/example.js
+/scripts/document/example-sync.js
+/scripts/shell/example-sync.js
+/scripts/view/example-sync.js
+Hello Document. Hello Shell. Hello 1.`);
     });
   });
 

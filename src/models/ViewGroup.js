@@ -1,19 +1,94 @@
+const mustache = require('mustache');
+const path = require('path');
+const fs = require('fs-promise');
+
 const View = require('./View');
 
 class ViewGroup extends View {
   constructor(input) {
     super(input);
-
+    this._input = input;
     this._views = input.views;
   }
 
-  render() {
+  getViewDetails() {
     return Promise.all(
-      this._views.map((view) => view.render())
+      this._views.map((view) => view.getViewDetails())
     )
-    .then((viewRenders) => {
-      console.log('viewRenders: ', viewRenders);
+    .then((viewDetails) => {
+      return viewDetails.filter((viewDetail) => {
+        return viewDetail ? true : false;
+      });
+    })
+    .then((childViewDetails) => {
+      return super.getViewDetails()
+      .then((currentViewDetails) => {
+        if (!currentViewDetails) {
+          return '';
+        }
+
+        return this._generateRenderData(childViewDetails, currentViewDetails)
+        .then((renderData) => {
+          const renderedContent = mustache.render(
+            currentViewDetails.template, renderData);
+
+          return {
+            template: renderedContent,
+            styles: renderData.getUsedStyles(),
+            scripts: renderData.getUsedScripts(),
+          };
+        });
+      });
     });
+  }
+
+  render() {
+    return this.getViewDetails()
+    .then((viewDetails) => {
+      return viewDetails.template;
+    });
+  }
+
+  _generateRenderData(childViewDetails, currentView) {
+    const renderData = {
+      styles: currentView.styles,
+      scripts: currentView.scripts,
+      getUsedStyles: () => {
+        return renderData['styles'];
+      },
+      getUsedScripts: () => {
+        return renderData['scripts'];
+      },
+    };
+    renderData['content'] = () => {
+      if (!childViewDetails) {
+        return '';
+      }
+
+      let contentString = '';
+      childViewDetails.forEach((details) => {
+        contentString += mustache.render(details.template, {});
+      });
+      return contentString;
+    };
+
+    const copyGroups = {
+      'styles': ['inline', 'remote'],
+      'scripts': ['sync', 'async'],
+    };
+
+    childViewDetails.forEach((childViewDetail) => {
+      Object.keys(copyGroups).forEach((key) => {
+        const values = copyGroups[key];
+        values.forEach((value) => {
+          renderData[key][value] = renderData[key][value].concat(
+            childViewDetail[key][value]
+          );
+        });
+      });
+    });
+
+    return Promise.resolve(renderData);
   }
 }
 
