@@ -1,6 +1,4 @@
 const mustache = require('mustache');
-const path = require('path');
-const fs = require('fs-promise');
 
 const View = require('./View');
 
