@@ -549,7 +549,6 @@ describe('Template Manager', function() {
               let content = `${getFrontMatter('document')}\n{{#styles.inline}}{{{.}}}\n{{/styles.inline}}{{#styles.remote}}{{{.}}}\n{{/styles.remote}}{{#scripts.async}}{{{.}}}\n{{/scripts.async}}{{#scripts.sync}}{{{.}}}\n{{/scripts.sync}}Hello Document. {{{content}}}`;
               return Promise.resolve(new Buffer(content));
             }
-            // TODO: Make inline
             case 'static/styles/view/example-inline.css': {
               return Promise.resolve(new Buffer('view-css-here'));
             }
@@ -606,28 +605,31 @@ Hello Document. Hello Shell. Hello 1.`);
     const PATH_1 = 'example/path/1';
     const DOC_1 = 'documents/html.tmpl';
 
-    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+    const getFrontMatter = (name) => {
+      return `---\nscripts:\n - /scripts/${name}/example.js\n - /scripts/${name}/example-sync.js\nstyles:\n - /styles/${name}/example.css\n - /styles/${name}/example-inline.css\n---`;
+    };
+
+    const View = proxyquire('../../src/models/View', {
       'fs-promise': {
         readFile: (fullPath) => {
           const relPath = path.relative(TEMPLATE_PATH, fullPath);
           switch(relPath) {
             case path.join('templates', PATH_1): {
-              let content = ``;
-              content += 'Hello 1.';
-              return Promise.resolve(new Buffer(content + '{{content}}'));
-            }
-            case path.join('templates', DOC_1): {
-              let content = `---\nscripts:\n - /scripts/3/example.js\nstyles:\n - /styles/3/example.css\n - /styles/3/example-inline.css\n---{{#styles.inline}}{{{.}}}{{/styles.inline}}{{#styles.async}}{{{.}}}{{/styles.async}}{{#scripts}}{{{.}}}{{/scripts}}{{{content}}}`;
+              let content = `Hello View.{{content}}`;
               return Promise.resolve(new Buffer(content));
             }
-            case 'static/styles/1/example-inline.css': {
-              return Promise.resolve(new Buffer('1/example-inline.css'));
+            case path.join('templates', DOC_1): {
+              let content = `${getFrontMatter('document')}{{#styles.inline}}{{{.}}}\n{{/styles.inline}}{{#styles.async}}{{{.}}}\n{{/styles.async}}{{#scripts.sync}}{{{.}}}\n{{/scripts.sync}}{{#scripts.async}}{{{.}}}\n{{/scripts.async}}Hello Document. {{{content}}}`;
+              return Promise.resolve(new Buffer(content));
             }
-            case 'static/styles/2/example-inline.css': {
-              return Promise.resolve(new Buffer('2/example-inline.css'));
+            case 'static/styles/additional-1/example-inline.css': {
+              return Promise.resolve(new Buffer('additional-1/example-inline.css'));
             }
-            case 'static/styles/3/example-inline.css': {
-              return Promise.resolve(new Buffer('3/example-inline.css'));
+            case 'static/styles/additional-2/example-inline.css': {
+              return Promise.resolve(new Buffer('additional-2/example-inline.css'));
+            }
+            case 'static/styles/document/example-inline.css': {
+              return Promise.resolve(new Buffer('document/example-inline.css'));
             }
           }
 
@@ -635,19 +637,28 @@ Hello Document. Hello Shell. Hello 1.`);
         },
       },
     });
+    const ViewGroup = proxyquire('../../src/models/ViewGroup', {
+      './View': View,
+    });
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      '../models/View': View,
+      '../models/ViewGroup': ViewGroup,
+    });
     const templateManager = new TemplateManager({
       relativePath: TEMPLATE_PATH,
     });
     return templateManager.render({
       styles: [
-        '/styles/1/example-inline.css',
-        '/styles/1/example.css',
-        '/styles/2/example-inline.css',
-        '/styles/2/example.css',
+        '/styles/additional-1/example-inline.css',
+        '/styles/additional-1/example.css',
+        '/styles/additional-2/example-inline.css',
+        '/styles/additional-2/example.css',
       ],
-      scrtips: [
-        '/scripts/1/example.js',
-        '/scripts/2/example.js',
+      scripts: [
+        '/scripts/additional-1/example-sync.js',
+        '/scripts/additional-1/example.js',
+        '/scripts/additional-2/example-sync.js',
+        '/scripts/additional-2/example.js',
       ],
       views: [
         {
@@ -656,7 +667,16 @@ Hello Document. Hello Shell. Hello 1.`);
       ],
     })
     .then((templateResult) => {
-      templateResult.should.equal(`2/example-inline.css1/example-inline.css3/example-inline.css/styles/2/example.css/styles/1/example.css/styles/3/example.css/scripts/3/example.js/scripts/2/example.js/scripts/1/example.jsHello Shell. Hello 1.`);
+      templateResult.should.equal(`document/example-inline.css
+additional-1/example-inline.css
+additional-2/example-inline.css
+/scripts/document/example-sync.js
+/scripts/additional-1/example-sync.js
+/scripts/additional-2/example-sync.js
+/scripts/document/example.js
+/scripts/additional-1/example.js
+/scripts/additional-2/example.js
+Hello Document. Hello View.`);
     });
   });
 
@@ -717,33 +737,37 @@ Hello Document. Hello Shell. Hello 1.`);
     const SHELL_1 = 'shells/example/2';
     const DOC_1 = 'documents/custom-example.tmpl';
 
-    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+    const getFrontMatter = (name) => {
+      return `---\nscripts:\n - /scripts/${name}/example.js\n - /scripts/${name}/example-sync.js\nstyles:\n - /styles/${name}/example.css\n - /styles/${name}/example-inline.css\n---`;
+    };
+
+    const View = proxyquire('../../src/models/View', {
       'fs-promise': {
         readFile: (fullPath) => {
           const relPath = path.relative(TEMPLATE_PATH, fullPath);
           switch(relPath) {
             case path.join('templates', PATH_1): {
-              let content = `---\nscripts:\n - /scripts/1/example.js\nstyles:\n - /styles/1/example.css\n - /styles/1/example-inline.css\n---`;
+              let content = `${getFrontMatter('view')}`;
               content += 'Hello 1.';
               return Promise.resolve(new Buffer(content + '{{content}}'));
             }
             case path.join('templates', SHELL_1): {
-              let content = `---\nscripts:\n - /scripts/2/example.js\nstyles:\n - /styles/2/example.css\n - /styles/2/example-inline.css\n---`;
+              let content = `${getFrontMatter('shell')}`;
               content += 'Hello Shell. {{{content}}}';
               return Promise.resolve(new Buffer(content));
             }
             case path.join('templates', DOC_1): {
-              let content = `---\nscripts:\n - /scripts/3/example.js\nstyles:\n - /styles/3/example.css\n - /styles/3/example-inline.css\n---{{#styles.inline}}{{{.}}}{{/styles.inline}}{{#styles.async}}{{{.}}}{{/styles.async}}{{#scripts}}{{{.}}}{{/scripts}}{{{content}}}`;
+              let content = `${getFrontMatter('document')}{{#styles.inline}}{{{.}}}\n{{/styles.inline}}{{#styles.async}}{{{.}}}\n{{/styles.async}}{{#scripts.sync}}{{{.}}}\n{{/scripts.sync}}{{#scripts.async}}{{{.}}}\n{{/scripts.async}}Hello Document. {{{content}}}`;
               return Promise.resolve(new Buffer(content));
             }
-            case 'static/styles/1/example-inline.css': {
-              return Promise.resolve(new Buffer('1/example-inline.css'));
+            case 'static/styles/view/example-inline.css': {
+              return Promise.resolve(new Buffer('view/example-inline.css'));
             }
-            case 'static/styles/2/example-inline.css': {
-              return Promise.resolve(new Buffer('2/example-inline.css'));
+            case 'static/styles/shell/example-inline.css': {
+              return Promise.resolve(new Buffer('shell/example-inline.css'));
             }
-            case 'static/styles/3/example-inline.css': {
-              return Promise.resolve(new Buffer('3/example-inline.css'));
+            case 'static/styles/document/example-inline.css': {
+              return Promise.resolve(new Buffer('document/example-inline.css'));
             }
           }
 
@@ -751,6 +775,14 @@ Hello Document. Hello Shell. Hello 1.`);
         },
       },
     });
+    const ViewGroup = proxyquire('../../src/models/ViewGroup', {
+      './View': View,
+    });
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      '../models/View': View,
+      '../models/ViewGroup': ViewGroup,
+    });
+
     const templateManager = new TemplateManager({
       relativePath: TEMPLATE_PATH,
     });
@@ -764,7 +796,16 @@ Hello Document. Hello Shell. Hello 1.`);
       ],
     })
     .then((templateResult) => {
-      templateResult.should.equal(`2/example-inline.css1/example-inline.css3/example-inline.css/styles/2/example.css/styles/1/example.css/styles/3/example.css/scripts/3/example.js/scripts/2/example.js/scripts/1/example.jsHello Shell. Hello 1.`);
+      templateResult.should.equal(`document/example-inline.css
+shell/example-inline.css
+view/example-inline.css
+/scripts/document/example-sync.js
+/scripts/shell/example-sync.js
+/scripts/view/example-sync.js
+/scripts/document/example.js
+/scripts/shell/example.js
+/scripts/view/example.js
+Hello Document. Hello Shell. Hello 1.`);
     });
   });
 

@@ -64,6 +64,8 @@ class TemplateManager {
     const documentViewGroup = new ViewGroup({
       templatePath: documentName,
       staticPath: this._staticPath,
+      styles: data.styles,
+      scripts: data.scripts,
       views: [shellViewGroup],
     });
 

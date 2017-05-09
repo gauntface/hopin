@@ -1,4 +1,5 @@
 const proxyquire = require('proxyquire').noCallThru();
+const path = require('path');
 
 describe('View', function() {
   it('should be able to reade a view template', function() {
@@ -109,17 +110,21 @@ describe('View', function() {
     const FRONT_MATTER = '---\nscripts:\n - /scripts/example.js\n - /scripts/sync-example.js\n - /scripts/example-sync.js\nstyles:\n - /styles/example.css\n - /styles/inline-example.css\n - /styles/example-inline.css\n---';
     const EXAMPLE_TEMPLATE = 'Hello.';
     const TEMPLATE_PATH = 'example/template/path';
+    const STATIC_PATH = 'example/static/path';
     const View = proxyquire('../../src/models/View', {
       'fs-promise': {
         readFile: (readPath) => {
           if (readPath === TEMPLATE_PATH) {
             return Promise.resolve(new Buffer(FRONT_MATTER + EXAMPLE_TEMPLATE));
+          } else if (readPath === path.join(STATIC_PATH, 'styles/example-inline.css')) {
+            return Promise.resolve(new Buffer('inlined-styles-from-example-inline.css'));
           }
           return Promise.reject(new Error('Injected error.'));
         },
       },
     });
     const view = new View({
+      staticPath: STATIC_PATH,
       templatePath: TEMPLATE_PATH,
     });
     return view.getViewDetails()
@@ -127,7 +132,7 @@ describe('View', function() {
       renderResult.template.should.equal(EXAMPLE_TEMPLATE);
       renderResult.styles.should.deep.equal({
         inline: [
-          '/styles/example-inline.css',
+          'inlined-styles-from-example-inline.css',
         ],
         remote: [
           '/styles/example.css',

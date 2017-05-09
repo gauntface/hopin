@@ -8,13 +8,15 @@ class View {
   constructor(input) {
     this._templatePath = input.templatePath;
     this._staticPath = input.staticPath;
+    this._additionalStyles = input.styles;
+    this._additionalScripts = input.scripts;
   }
 
   getViewDetails() {
     return this._readTemplate()
     .then((templateDetails) => {
       if (!templateDetails) {
-        return null;
+        templateDetails = {};
       }
 
       const inlineStyles = [];
@@ -22,6 +24,17 @@ class View {
 
       if (templateDetails.styles) {
         templateDetails.styles.forEach((stylesheet) => {
+          const stylesheetPath = path.parse(stylesheet);
+          if (stylesheetPath.name.endsWith('-inline')) {
+            inlineStyles.push(stylesheet);
+          } else {
+            remoteStyles.push(stylesheet);
+          }
+        });
+      }
+
+      if (this._additionalStyles) {
+        this._additionalStyles.forEach((stylesheet) => {
           const stylesheetPath = path.parse(stylesheet);
           if (stylesheetPath.name.endsWith('-inline')) {
             inlineStyles.push(stylesheet);
@@ -45,6 +58,17 @@ class View {
         });
       }
 
+      if (this._additionalScripts) {
+        this._additionalScripts.forEach((script) => {
+          const scriptPath = path.parse(script);
+          if (scriptPath.name.endsWith('-sync')) {
+            syncScripts.push(script);
+          } else {
+            asyncScripts.push(script);
+          }
+        });
+      }
+
       return Promise.all(inlineStyles.map((inlineStyle) => {
         return fs.readFile(path.join(this._staticPath, inlineStyle))
         .then((fileBuffer) => {
@@ -55,7 +79,7 @@ class View {
         // This is the template with yaml front matter parsed out
         // Template content will be in '__content'
         return {
-          template: templateDetails.__content,
+          template: templateDetails.__content || '{{{content}}}',
           styles: {
             inline: inlineStyles,
             remote: remoteStyles,
