@@ -874,7 +874,7 @@ Hello Document. Hello Shell. Hello 1.`);
             case path.join('templates', 'documents/html.tmpl'): {
               return Promise.resolve(new Buffer('{{{content}}}'));
             }
-            case path.join('templates/example/path/1/static/example-partial.html'): {
+            case path.join('static/example-partial.html'): {
               return Promise.resolve(new Buffer('Partial Contents'));
             }
           }

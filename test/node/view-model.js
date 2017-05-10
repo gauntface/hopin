@@ -179,15 +179,16 @@ describe('View', function() {
 
   it('should be able to render a view with partials', function() {
     const EXAMPLE_TEMPLATE = '---\npartials:\n - static/example-partial.html\n - static/example-partial-2.html\n---Hello, {{> static/example-partial.html}}.';
+    const PROJECT_PATH = 'example/project/path';
     const TEMPLATE_PATH = 'example/template/path';
     const View = proxyquire('../../src/models/View', {
       'fs-promise': {
         readFile: (readPath) => {
           if (readPath === TEMPLATE_PATH) {
             return Promise.resolve(new Buffer(EXAMPLE_TEMPLATE));
-          } else if(readPath === path.join(TEMPLATE_PATH, 'static/example-partial.html')) {
+          } else if(readPath === path.join(PROJECT_PATH, 'static/example-partial.html')) {
             return Promise.resolve(new Buffer('example-partial-file-contents.'));
-          } else if(readPath === path.join(TEMPLATE_PATH, 'static/example-partial-2.html')) {
+          } else if(readPath === path.join(PROJECT_PATH, 'static/example-partial-2.html')) {
             return Promise.resolve(new Buffer('example-partial-2-file-contents.'));
           }
           return Promise.reject(new Error('Injected error. ' + readPath));
@@ -195,6 +196,7 @@ describe('View', function() {
       },
     });
     const view = new View({
+      projectPath: PROJECT_PATH,
       templatePath: TEMPLATE_PATH,
     });
     return view.getViewDetails()

@@ -6,6 +6,7 @@ const yamlFront = require('yaml-front-matter');
 
 class View {
   constructor(input) {
+    this._projectPath = input.projectPath;
     this._templatePath = input.templatePath;
     this._staticPath = input.staticPath;
     this._additionalStyles = input.styles;
@@ -79,7 +80,7 @@ class View {
 
       const partialPaths = templateDetails.partials || [];
       const partialFileReads = partialPaths.map((partialPath) => {
-        return fs.readFile(path.join(this._templatePath, partialPath))
+        return fs.readFile(path.join(this._projectPath, partialPath))
         .then((fileBuffer) => {
           return {
             path: partialPath,

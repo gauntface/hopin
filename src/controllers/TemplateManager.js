@@ -50,18 +50,21 @@ class TemplateManager {
     const viewObjects = data.views || [];
 
     const parsedViews = viewObjects.map((viewObj) => {
+      viewObj.projectPath = this._relativePath;
       viewObj.templatePath = path.join(
         this._templatePath, viewObj.templatePath);
       viewObj.staticPath = this._staticPath;
       return new View(viewObj);
     });
     const shellViewGroup = new ViewGroup({
+      projectPath: this._relativePath,
       templatePath: shellName,
       staticPath: this._staticPath,
       views: parsedViews,
     });
 
     const documentViewGroup = new ViewGroup({
+      projectPath: this._relativePath,
       templatePath: documentName,
       staticPath: this._staticPath,
       styles: data.styles,
