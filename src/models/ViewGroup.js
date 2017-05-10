@@ -65,7 +65,9 @@ class ViewGroup extends View {
 
       let contentString = '';
       childViewDetails.forEach((details) => {
-        contentString += mustache.render(details.template, {});
+        contentString += mustache.render(details.template, {
+          data: details.data,
+        });
       });
       return contentString;
     };

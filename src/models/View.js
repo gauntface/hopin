@@ -10,6 +10,7 @@ class View {
     this._staticPath = input.staticPath;
     this._additionalStyles = input.styles;
     this._additionalScripts = input.scripts;
+    this._data = input.data;
   }
 
   getViewDetails() {
@@ -88,6 +89,7 @@ class View {
             sync: syncScripts,
             async: asyncScripts,
           },
+          data: this._data,
         };
       });
     });

@@ -150,4 +150,30 @@ describe('View', function() {
       });
     });
   });
+
+  it('should be able to render a view with data', function() {
+    const EXAMPLE_TEMPLATE = 'Hello, {{data.exampleName}}.';
+    const EXAMPLE_DATA = {
+      exampleName: 'World',
+    };
+    const TEMPLATE_PATH = 'example/template/path';
+    const View = proxyquire('../../src/models/View', {
+      'fs-promise': {
+        readFile: (readPath) => {
+          if (readPath === TEMPLATE_PATH) {
+            return Promise.resolve(new Buffer(EXAMPLE_TEMPLATE));
+          }
+          return Promise.reject(new Error('Injected error.'));
+        },
+      },
+    });
+    const view = new View({
+      templatePath: TEMPLATE_PATH,
+      data: EXAMPLE_DATA,
+    });
+    return view.getViewDetails()
+    .then((renderResult) => {
+      renderResult.data.should.equal(EXAMPLE_DATA);
+    });
+  });
 });
