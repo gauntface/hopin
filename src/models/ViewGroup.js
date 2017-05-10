@@ -51,6 +51,7 @@ class ViewGroup extends View {
 
   _generateRenderData(childViewDetails, currentView) {
     const renderData = {
+      data: currentView.data,
       styles: currentView.styles,
       scripts: currentView.scripts,
       getUsedStyles: () => {

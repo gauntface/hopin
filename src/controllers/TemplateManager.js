@@ -38,18 +38,18 @@ class TemplateManager {
     });
   }
 
-  render(data) {
-    if (!data) {
+  render(renderInput) {
+    if (!renderInput) {
       throw new HopinError('render-data-required');
     }
 
     return this._getStaticAssets()
     .then((staticAssetPartials) => {
       const documentName = path.join(this._templatePath,
-      (data.document || DEFAULT_DOCUMENT));
-    const shellName = data.shell ?
-      path.join(this._templatePath, data.shell) : null;
-    const viewObjects = data.views || [];
+      (renderInput.document || DEFAULT_DOCUMENT));
+    const shellName = renderInput.shell ?
+      path.join(this._templatePath, renderInput.shell) : null;
+    const viewObjects = renderInput.views || [];
 
     const parsedViews = viewObjects.map((viewObj) => {
       viewObj.templateDir = this._templatePath;
@@ -71,10 +71,11 @@ class TemplateManager {
       templateDir: this._templatePath,
       templatePath: documentName,
       staticPath: this._staticPath,
-      styles: data.styles,
-      scripts: data.scripts,
-      partials: staticAssetPartials,
       views: [shellViewGroup],
+      partials: staticAssetPartials,
+      styles: renderInput.styles,
+      scripts: renderInput.scripts,
+      data: renderInput.data,
     });
 
     return documentViewGroup.render();
