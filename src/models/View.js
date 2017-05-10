@@ -70,17 +70,45 @@ class View {
         });
       }
 
-      return Promise.all(inlineStyles.map((inlineStyle) => {
+      const cssFileReads = inlineStyles.map((inlineStyle) => {
         return fs.readFile(path.join(this._staticPath, inlineStyle))
         .then((fileBuffer) => {
           return fileBuffer.toString();
         });
-      }))
-      .then((inlineStyles) => {
+      });
+
+      const partialPaths = templateDetails.partials || [];
+      const partialFileReads = partialPaths.map((partialPath) => {
+        return fs.readFile(path.join(this._templatePath, partialPath))
+        .then((fileBuffer) => {
+          return {
+            path: partialPath,
+            content: fileBuffer.toString(),
+          };
+        });
+      });
+
+      const partialFilters = Promise.all(partialFileReads)
+      .then((allPartials) => {
+        const allPartialDetails = {};
+        allPartials.forEach((partialDetail) => {
+          allPartialDetails[partialDetail.path] = partialDetail.content;
+        });
+        return allPartialDetails;
+      });
+
+      return Promise.all([
+        Promise.all(cssFileReads),
+        partialFilters,
+      ])
+      .then((results) => {
+        const inlineStyles = results[0];
+        const partials = results[1];
         // This is the template with yaml front matter parsed out
         // Template content will be in '__content'
         return {
           template: templateDetails.__content || '{{{content}}}',
+          partials,
           styles: {
             inline: inlineStyles,
             remote: remoteStyles,

@@ -176,4 +176,33 @@ describe('View', function() {
       renderResult.data.should.equal(EXAMPLE_DATA);
     });
   });
+
+  it('should be able to render a view with partials', function() {
+    const EXAMPLE_TEMPLATE = '---\npartials:\n - static/example-partial.html\n - static/example-partial-2.html\n---Hello, {{> static/example-partial.html}}.';
+    const TEMPLATE_PATH = 'example/template/path';
+    const View = proxyquire('../../src/models/View', {
+      'fs-promise': {
+        readFile: (readPath) => {
+          if (readPath === TEMPLATE_PATH) {
+            return Promise.resolve(new Buffer(EXAMPLE_TEMPLATE));
+          } else if(readPath === path.join(TEMPLATE_PATH, 'static/example-partial.html')) {
+            return Promise.resolve(new Buffer('example-partial-file-contents.'));
+          } else if(readPath === path.join(TEMPLATE_PATH, 'static/example-partial-2.html')) {
+            return Promise.resolve(new Buffer('example-partial-2-file-contents.'));
+          }
+          return Promise.reject(new Error('Injected error. ' + readPath));
+        },
+      },
+    });
+    const view = new View({
+      templatePath: TEMPLATE_PATH,
+    });
+    return view.getViewDetails()
+    .then((renderResult) => {
+      renderResult.partials.should.deep.equal({
+        'static/example-partial.html': 'example-partial-file-contents.',
+        'static/example-partial-2.html': 'example-partial-2-file-contents.',
+      });
+    });
+  });
 });

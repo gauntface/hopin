@@ -857,4 +857,52 @@ Hello Document. Hello Shell. Hello 1.`);
       templateResult.should.equal(`Hello, World.`);
     });
   });
+
+  it('should be able render with partials', function() {
+    const TEMPLATE_PATH = 'tmpl-path';
+    const PATH_1 = 'example/path/1';
+
+    const View = proxyquire('../../src/models/View', {
+      'fs-promise': {
+        readFile: (fullPath) => {
+          const relPath = path.relative(TEMPLATE_PATH, fullPath);
+          switch(relPath) {
+            case path.join('templates', PATH_1): {
+              let content = `---\npartials:\n - static/example-partial.html\n---Hello, {{> static/example-partial.html}}.`;
+              return Promise.resolve(new Buffer(content));
+            }
+            case path.join('templates', 'documents/html.tmpl'): {
+              return Promise.resolve(new Buffer('{{{content}}}'));
+            }
+            case path.join('templates/example/path/1/static/example-partial.html'): {
+              return Promise.resolve(new Buffer('Partial Contents'));
+            }
+          }
+
+          return Promise.reject(new Error('Unknown template path: ' + fullPath));
+        },
+      },
+    });
+    const ViewGroup = proxyquire('../../src/models/ViewGroup', {
+      './View': View,
+    });
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      '../models/View': View,
+      '../models/ViewGroup': ViewGroup,
+    });
+
+    const templateManager = new TemplateManager({
+      relativePath: TEMPLATE_PATH,
+    });
+    return templateManager.render({
+      views: [
+        {
+          templatePath: PATH_1,
+        },
+      ],
+    })
+    .then((templateResult) => {
+      templateResult.should.equal(`Hello, Partial Contents.`);
+    });
+  });
 });
