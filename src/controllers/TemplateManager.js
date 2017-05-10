@@ -43,36 +43,42 @@ class TemplateManager {
       throw new HopinError('render-data-required');
     }
 
-    const documentName = path.join(this._templatePath,
+    return this._getStaticAssets()
+    .then((staticAssetPartials) => {
+      const documentName = path.join(this._templatePath,
       (data.document || DEFAULT_DOCUMENT));
     const shellName = data.shell ?
       path.join(this._templatePath, data.shell) : null;
     const viewObjects = data.views || [];
 
     const parsedViews = viewObjects.map((viewObj) => {
-      viewObj.projectPath = this._relativePath;
+      viewObj.templateDir = this._templatePath;
       viewObj.templatePath = path.join(
         this._templatePath, viewObj.templatePath);
       viewObj.staticPath = this._staticPath;
+      viewObj.partials = staticAssetPartials;
       return new View(viewObj);
     });
     const shellViewGroup = new ViewGroup({
-      projectPath: this._relativePath,
+      templateDir: this._templatePath,
       templatePath: shellName,
       staticPath: this._staticPath,
       views: parsedViews,
+      partials: staticAssetPartials,
     });
 
     const documentViewGroup = new ViewGroup({
-      projectPath: this._relativePath,
+      templateDir: this._templatePath,
       templatePath: documentName,
       staticPath: this._staticPath,
       styles: data.styles,
       scripts: data.scripts,
+      partials: staticAssetPartials,
       views: [shellViewGroup],
     });
 
     return documentViewGroup.render();
+    });
 
     /** let shellPromise = Promise.resolve({});
     if (data && data.shell) {

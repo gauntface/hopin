@@ -28,7 +28,9 @@ class ViewGroup extends View {
         return this._generateRenderData(childViewDetails, currentViewDetails)
         .then((renderData) => {
           const renderedContent = mustache.render(
-            currentViewDetails.template, renderData);
+            currentViewDetails.template,
+            renderData,
+            currentViewDetails.partials);
 
           return {
             template: renderedContent,

@@ -858,7 +858,7 @@ Hello Document. Hello Shell. Hello 1.`);
     });
   });
 
-  it('should be able render with partials', function() {
+  it('should be able render view with partials', function() {
     const TEMPLATE_PATH = 'tmpl-path';
     const PATH_1 = 'example/path/1';
 
@@ -868,14 +868,14 @@ Hello Document. Hello Shell. Hello 1.`);
           const relPath = path.relative(TEMPLATE_PATH, fullPath);
           switch(relPath) {
             case path.join('templates', PATH_1): {
-              let content = `---\npartials:\n - static/example-partial.html\n---Hello, {{> static/example-partial.html}}.`;
+              let content = `---\npartials:\n - normal-partial/example-partial.html\n---Hello, {{> normal-partial/example-partial.html}} {{> static/example-partial.html}}.`;
               return Promise.resolve(new Buffer(content));
             }
             case path.join('templates', 'documents/html.tmpl'): {
               return Promise.resolve(new Buffer('{{{content}}}'));
             }
-            case path.join('static/example-partial.html'): {
-              return Promise.resolve(new Buffer('Partial Contents'));
+            case path.join('templates/normal-partial/example-partial.html'): {
+              return Promise.resolve(new Buffer('Normal Partial Contents'));
             }
           }
 
@@ -889,6 +889,24 @@ Hello Document. Hello Shell. Hello 1.`);
     const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
       '../models/View': View,
       '../models/ViewGroup': ViewGroup,
+      'glob': (globPattern, cb) => {
+        globPattern.should.equal('tmpl-path/static/**/*.*');
+        cb(null, [
+          'tmpl-path/static/example-partial.html',
+        ]);
+      },
+      'fs-promise': {
+        stat: () => {
+          return Promise.resolve({
+            isFile: () => {
+              return true;
+            },
+          });
+        },
+        readFile: () => {
+          return Promise.resolve(new Buffer('Static Partial Contents'));
+        },
+      },
     });
 
     const templateManager = new TemplateManager({
@@ -902,7 +920,146 @@ Hello Document. Hello Shell. Hello 1.`);
       ],
     })
     .then((templateResult) => {
-      templateResult.should.equal(`Hello, Partial Contents.`);
+      templateResult.should.equal(`Hello, Normal Partial Contents Static Partial Contents.`);
+    });
+  });
+
+  it('should be able render shell with partials', function() {
+    const TEMPLATE_PATH = 'tmpl-path';
+    const SHELL_1 = 'shells/example/2';
+    const PATH_1 = 'example/path/1';
+
+    const View = proxyquire('../../src/models/View', {
+      'fs-promise': {
+        readFile: (fullPath) => {
+          const relPath = path.relative(TEMPLATE_PATH, fullPath);
+          switch(relPath) {
+            case path.join('templates', PATH_1): {
+              let content = `Hello View.`;
+              return Promise.resolve(new Buffer(content));
+            }
+            case path.join('templates', SHELL_1): {
+              const content = `---\npartials:\n - normal-partial/example-partial.html\n---Hello Shell. {{> normal-partial/example-partial.html}} {{> static/example-partial.html}} {{{content}}}`;
+              return Promise.resolve(new Buffer(content));
+            }
+            case path.join('templates', 'documents/html.tmpl'): {
+              return Promise.resolve(new Buffer('{{{content}}}'));
+            }
+            case path.join('templates/normal-partial/example-partial.html'): {
+              return Promise.resolve(new Buffer('Normal Partial Contents'));
+            }
+          }
+
+          return Promise.reject(new Error('Unknown template path: ' + fullPath));
+        },
+      },
+    });
+    const ViewGroup = proxyquire('../../src/models/ViewGroup', {
+      './View': View,
+    });
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      '../models/View': View,
+      '../models/ViewGroup': ViewGroup,
+      'glob': (globPattern, cb) => {
+        globPattern.should.equal('tmpl-path/static/**/*.*');
+        cb(null, [
+          'tmpl-path/static/example-partial.html',
+        ]);
+      },
+      'fs-promise': {
+        stat: () => {
+          return Promise.resolve({
+            isFile: () => {
+              return true;
+            },
+          });
+        },
+        readFile: () => {
+          return Promise.resolve(new Buffer('Static Partial Contents'));
+        },
+      },
+    });
+
+    const templateManager = new TemplateManager({
+      relativePath: TEMPLATE_PATH,
+    });
+    return templateManager.render({
+      shell: SHELL_1,
+      views: [
+        {
+          templatePath: PATH_1,
+        },
+      ],
+    })
+    .then((templateResult) => {
+      templateResult.should.equal(`Hello Shell. Normal Partial Contents Static Partial Contents Hello View.`);
+    });
+  });
+
+  it('should be able render document with partials', function() {
+    const TEMPLATE_PATH = 'tmpl-path';
+    const PATH_1 = 'example/path/1';
+
+    const View = proxyquire('../../src/models/View', {
+      'fs-promise': {
+        readFile: (fullPath) => {
+          const relPath = path.relative(TEMPLATE_PATH, fullPath);
+          switch(relPath) {
+            case path.join('templates', PATH_1): {
+              let content = `Hello View.`;
+              return Promise.resolve(new Buffer(content));
+            }
+            case path.join('templates', 'documents/html.tmpl'): {
+              const content = `---\npartials:\n - normal-partial/example-partial.html\n---Hello Document. {{> normal-partial/example-partial.html}} {{> static/example-partial.html}} {{{content}}}`;
+              return Promise.resolve(new Buffer(content));
+            }
+            case path.join('templates/normal-partial/example-partial.html'): {
+              return Promise.resolve(new Buffer('Normal Partial Contents'));
+            }
+          }
+
+          return Promise.reject(new Error('Unknown template path: ' + fullPath));
+        },
+      },
+    });
+    const ViewGroup = proxyquire('../../src/models/ViewGroup', {
+      './View': View,
+    });
+    const TemplateManager = proxyquire('../../src/controllers/TemplateManager', {
+      '../models/View': View,
+      '../models/ViewGroup': ViewGroup,
+      'glob': (globPattern, cb) => {
+        globPattern.should.equal('tmpl-path/static/**/*.*');
+        cb(null, [
+          'tmpl-path/static/example-partial.html',
+        ]);
+      },
+      'fs-promise': {
+        stat: () => {
+          return Promise.resolve({
+            isFile: () => {
+              return true;
+            },
+          });
+        },
+        readFile: () => {
+          return Promise.resolve(new Buffer('Static Partial Contents'));
+        },
+      },
+    });
+
+    const templateManager = new TemplateManager({
+      relativePath: TEMPLATE_PATH,
+    });
+    return templateManager.render({
+      views: [
+        {
+          templatePath: PATH_1,
+        },
+      ],
+    })
+    .then((templateResult) => {
+      templateResult.should.equal(`Hello Document. Normal Partial Contents Static Partial Contents Hello View.`);
     });
   });
 });

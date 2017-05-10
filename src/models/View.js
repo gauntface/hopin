@@ -6,11 +6,12 @@ const yamlFront = require('yaml-front-matter');
 
 class View {
   constructor(input) {
-    this._projectPath = input.projectPath;
+    this._templateDir = input.templateDir;
     this._templatePath = input.templatePath;
     this._staticPath = input.staticPath;
     this._additionalStyles = input.styles;
     this._additionalScripts = input.scripts;
+    this._additionalPartials = input.partials;
     this._data = input.data;
   }
 
@@ -80,18 +81,23 @@ class View {
 
       const partialPaths = templateDetails.partials || [];
       const partialFileReads = partialPaths.map((partialPath) => {
-        return fs.readFile(path.join(this._projectPath, partialPath))
+        return fs.readFile(path.join(this._templateDir, partialPath))
         .then((fileBuffer) => {
+          return yamlFront.loadFront(fileBuffer.toString());
+        })
+        .then((templateDetails) => {
           return {
             path: partialPath,
-            content: fileBuffer.toString(),
+            content: templateDetails.__content,
+            styles: [],
+            scripts: [],
           };
         });
       });
 
       const partialFilters = Promise.all(partialFileReads)
       .then((allPartials) => {
-        const allPartialDetails = {};
+        const allPartialDetails = Object.assign({}, this._additionalPartials);
         allPartials.forEach((partialDetail) => {
           allPartialDetails[partialDetail.path] = partialDetail.content;
         });
@@ -105,6 +111,7 @@ class View {
       .then((results) => {
         const inlineStyles = results[0];
         const partials = results[1];
+
         // This is the template with yaml front matter parsed out
         // Template content will be in '__content'
         return {
