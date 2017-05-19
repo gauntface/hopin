@@ -10,13 +10,13 @@ describe('View Group Model', function() {
           } else if(fullPath === 'template-dir/view-2/example/view/template.tmpl') {
             return Promise.resolve(new Buffer('view-2-template-content. '));
           } else if(fullPath === 'static-dir/view-1/styles/view-1-inline.css') {
-            return Promise.resolve(new Buffer('view-1-inline-styles'));
+            return Promise.resolve(new Buffer('CONTENT::view-1-inline-styles'));
           } else if(fullPath === 'static-dir/view-2/styles/view-2-inline.css') {
-            return Promise.resolve(new Buffer('view-2-inline-styles'));
+            return Promise.resolve(new Buffer('CONTENT::view-2-inline-styles'));
           } else if(fullPath === 'template-dir/example/view/template.tmpl') {
             return Promise.resolve(new Buffer('template-contents. {{data.example}}. {{data.hello}}. {{{content}}}'));
           } else if(fullPath === 'static-dir/styles/2-inline.css') {
-            return Promise.resolve(new Buffer('static-dir-styles-2-inline.css'));
+            return Promise.resolve(new Buffer('CONTENT::static-dir-styles-2-inline.css'));
           }
           return Promise.reject(new Error('Unknown template path: ' + fullPath));
         },
@@ -98,11 +98,11 @@ describe('View Group Model', function() {
         },
         styles: {
           inline: [
-            'static-dir-styles-2-inline.css',
-            'view-1-inline-styles',
-            'view-2-inline-styles',
+            'CONTENT::static-dir-styles-2-inline.css',
+            'CONTENT::view-1-inline-styles',
+            'CONTENT::view-2-inline-styles',
           ],
-          remote: [
+          async: [
             'styles/1.css',
             '/styles/view-1.css',
             '/styles/view-2.css',

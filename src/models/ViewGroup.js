@@ -72,11 +72,12 @@ class ViewGroup extends View {
           data: details.data,
         }, details.partials);
       });
+
       return contentString;
     };
 
     const copyGroups = {
-      'styles': ['inline', 'remote'],
+      'styles': ['inline', 'async'],
       'scripts': ['sync', 'async'],
     };
 

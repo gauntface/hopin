@@ -546,7 +546,7 @@ describe('Template Manager', function() {
               return Promise.resolve(new Buffer(content));
             }
             case path.join('templates', DOC_1): {
-              let content = `${getFrontMatter('document')}\n{{#styles.inline}}{{{.}}}\n{{/styles.inline}}{{#styles.remote}}{{{.}}}\n{{/styles.remote}}{{#scripts.async}}{{{.}}}\n{{/scripts.async}}{{#scripts.sync}}{{{.}}}\n{{/scripts.sync}}Hello Document. {{{content}}}`;
+              let content = `${getFrontMatter('document')}\n{{#styles.inline}}{{{.}}}\n{{/styles.inline}}{{#styles.async}}{{{.}}}\n{{/styles.async}}{{#scripts.async}}{{{.}}}\n{{/scripts.async}}{{#scripts.sync}}{{{.}}}\n{{/scripts.sync}}Hello Document. {{{content}}}`;
               return Promise.resolve(new Buffer(content));
             }
             case 'static/styles/view/example-inline.css': {
@@ -602,7 +602,7 @@ Hello Document. Hello Shell. Hello 1.`);
 
   it('should render HTML with additional styles and scripts', function() {
     const TEMPLATE_PATH = 'tmpl-path';
-    const PATH_1 = 'example/path/1';
+    const PATH_1 = 'example/path/view-1';
     const DOC_1 = 'documents/html.tmpl';
 
     const getFrontMatter = (name) => {
@@ -623,13 +623,13 @@ Hello Document. Hello Shell. Hello 1.`);
               return Promise.resolve(new Buffer(content));
             }
             case 'static/styles/additional-1/example-inline.css': {
-              return Promise.resolve(new Buffer('additional-1/example-inline.css'));
+              return Promise.resolve(new Buffer('CONTENTS::additional-1/example-inline.css'));
             }
             case 'static/styles/additional-2/example-inline.css': {
-              return Promise.resolve(new Buffer('additional-2/example-inline.css'));
+              return Promise.resolve(new Buffer('CONTENTS::additional-2/example-inline.css'));
             }
             case 'static/styles/document/example-inline.css': {
-              return Promise.resolve(new Buffer('document/example-inline.css'));
+              return Promise.resolve(new Buffer('CONTENTS::document/example-inline.css'));
             }
           }
 
@@ -644,9 +644,11 @@ Hello Document. Hello Shell. Hello 1.`);
       '../models/View': View,
       '../models/ViewGroup': ViewGroup,
     });
+
     const templateManager = new TemplateManager({
       relativePath: TEMPLATE_PATH,
     });
+
     return templateManager.render({
       styles: [
         '/styles/additional-1/example-inline.css',
@@ -667,9 +669,12 @@ Hello Document. Hello Shell. Hello 1.`);
       ],
     })
     .then((templateResult) => {
-      templateResult.should.equal(`document/example-inline.css
-additional-1/example-inline.css
-additional-2/example-inline.css
+      templateResult.should.equal(`CONTENTS::document/example-inline.css
+CONTENTS::additional-1/example-inline.css
+CONTENTS::additional-2/example-inline.css
+/styles/document/example.css
+/styles/additional-1/example.css
+/styles/additional-2/example.css
 /scripts/document/example-sync.js
 /scripts/additional-1/example-sync.js
 /scripts/additional-2/example-sync.js
@@ -799,6 +804,9 @@ Hello Document. Hello View.`);
       templateResult.should.equal(`document/example-inline.css
 shell/example-inline.css
 view/example-inline.css
+/styles/document/example.css
+/styles/shell/example.css
+/styles/view/example.css
 /scripts/document/example-sync.js
 /scripts/shell/example-sync.js
 /scripts/view/example-sync.js

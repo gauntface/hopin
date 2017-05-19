@@ -16,14 +16,78 @@ class View {
   }
 
   getViewDetails() {
-    return this._readTemplate()
+    return this._readTemplate(this._templatePath)
+    .then((templateDetails) => {
+      if (!templateDetails) {
+        return null;
+      }
+
+      if (this._additionalStyles) {
+        this._additionalStyles.forEach((stylesheet) => {
+          const stylesheetPath = path.parse(stylesheet);
+          if (stylesheetPath.name.endsWith('-inline')) {
+            templateDetails.styles.inline.push(stylesheet);
+          } else {
+            templateDetails.styles.async.push(stylesheet);
+          }
+        });
+      }
+
+      if (this._additionalScripts) {
+        this._additionalScripts.forEach((script) => {
+          const scriptPath = path.parse(script);
+          if (scriptPath.name.endsWith('-sync')) {
+            templateDetails.scripts.sync.push(script);
+          } else {
+            templateDetails.scripts.async.push(script);
+          }
+        });
+      }
+
+      if (this._additionalPartials) {
+        Object.keys(this._additionalPartials).forEach((key) => {
+          templateDetails.partials[key] = this._additionalPartials[key];
+        });
+      }
+
+      return this._readInlineCSSFiles(templateDetails.styles.inline)
+      .then((inlineStyles) => {
+        templateDetails.styles.inline = inlineStyles;
+        return templateDetails;
+      });
+    });
+  }
+
+  _readTemplate(templatePath) {
+    if (!templatePath) {
+      return Promise.resolve({
+          template: '{{{content}}}',
+          partials: {},
+          styles: {
+            inline: [],
+            async: [],
+          },
+          scripts: {
+            sync: [],
+            async: [],
+          },
+          data: null,
+        }
+      );
+    }
+
+    return fs.readFile(templatePath)
+    .then((fileContentBuffer) => fileContentBuffer.toString())
+    .then((fileContent) => {
+      return yamlFront.loadFront(fileContent);
+    })
     .then((templateDetails) => {
       if (!templateDetails) {
         templateDetails = {};
       }
 
-      const inlineStyles = [];
-      const remoteStyles = [];
+      let inlineStyles = [];
+      let asyncStyles = [];
 
       if (templateDetails.styles) {
         templateDetails.styles.forEach((stylesheet) => {
@@ -31,18 +95,7 @@ class View {
           if (stylesheetPath.name.endsWith('-inline')) {
             inlineStyles.push(stylesheet);
           } else {
-            remoteStyles.push(stylesheet);
-          }
-        });
-      }
-
-      if (this._additionalStyles) {
-        this._additionalStyles.forEach((stylesheet) => {
-          const stylesheetPath = path.parse(stylesheet);
-          if (stylesheetPath.name.endsWith('-inline')) {
-            inlineStyles.push(stylesheet);
-          } else {
-            remoteStyles.push(stylesheet);
+            asyncStyles.push(stylesheet);
           }
         });
       }
@@ -61,65 +114,32 @@ class View {
         });
       }
 
-      if (this._additionalScripts) {
-        this._additionalScripts.forEach((script) => {
-          const scriptPath = path.parse(script);
-          if (scriptPath.name.endsWith('-sync')) {
-            syncScripts.push(script);
-          } else {
-            asyncScripts.push(script);
-          }
-        });
-      }
+      return this._readPartialFiles(templateDetails.partials)
+      .then((partialDetails) => {
+        let partialObject = {};
+        partialDetails.forEach((partialDetail) => {
+          partialObject[partialDetail.path] =
+            partialDetail.templateDetails.template;
 
-      const cssFileReads = inlineStyles.map((inlineStyle) => {
-        return fs.readFile(path.join(this._staticPath, inlineStyle))
-        .then((fileBuffer) => {
-          return fileBuffer.toString();
+          // Include nested partials.
+          const partialKeys = Object.keys(
+            partialDetail.templateDetails.partials);
+          partialKeys.forEach((partialKey) => {
+            const pTemplate = partialDetail.templateDetails;
+            partialObject[partialKey] = pTemplate.partials[partialKey];
+            inlineStyles = inlineStyles.concat(pTemplate.styles.inline);
+            asyncStyles = asyncStyles.concat(pTemplate.styles.async);
+          });
         });
-      });
-
-      const partialPaths = templateDetails.partials || [];
-      const partialFileReads = partialPaths.map((partialPath) => {
-        return fs.readFile(path.join(this._templateDir, partialPath))
-        .then((fileBuffer) => {
-          return yamlFront.loadFront(fileBuffer.toString());
-        })
-        .then((templateDetails) => {
-          return {
-            path: partialPath,
-            content: templateDetails.__content,
-            styles: [],
-            scripts: [],
-          };
-        });
-      });
-
-      const partialFilters = Promise.all(partialFileReads)
-      .then((allPartials) => {
-        const allPartialDetails = Object.assign({}, this._additionalPartials);
-        allPartials.forEach((partialDetail) => {
-          allPartialDetails[partialDetail.path] = partialDetail.content;
-        });
-        return allPartialDetails;
-      });
-
-      return Promise.all([
-        Promise.all(cssFileReads),
-        partialFilters,
-      ])
-      .then((results) => {
-        const inlineStyles = results[0];
-        const partials = results[1];
 
         // This is the template with yaml front matter parsed out
         // Template content will be in '__content'
         return {
           template: templateDetails.__content || '{{{content}}}',
-          partials,
+          partials: partialObject,
           styles: {
             inline: inlineStyles,
-            remote: remoteStyles,
+            async: asyncStyles,
           },
           scripts: {
             sync: syncScripts,
@@ -131,16 +151,42 @@ class View {
     });
   }
 
-  _readTemplate() {
-    if (!this._templatePath) {
-      return Promise.resolve(null);
-    }
-
-    return fs.readFile(this._templatePath)
-    .then((fileContentBuffer) => fileContentBuffer.toString())
-    .then((fileContent) => {
-      return yamlFront.loadFront(fileContent);
+  _readInlineCSSFiles(inlineStyles) {
+    const cssFileReads = inlineStyles.map((inlineStyle) => {
+      return fs.readFile(path.join(this._staticPath, inlineStyle))
+      .then((fileBuffer) => {
+        return fileBuffer.toString();
+      });
     });
+
+    return Promise.all(cssFileReads);
+  }
+
+  _readPartialFiles(partials) {
+    const partialPaths = partials || [];
+    const partialFileReads = partialPaths.map((partialPath) => {
+      return this._readTemplate(path.join(this._templateDir, partialPath))
+      .then((templateDetails) => {
+        return {
+          path: partialPath,
+          templateDetails: templateDetails,
+        };
+      });
+      /** return fs.readFile(path.join(this._templateDir, partialPath))
+      .then((fileBuffer) => {
+        return yamlFront.loadFront(fileBuffer.toString());
+      })
+      .then((templateDetails) => {
+        return {
+          path: partialPath,
+          content: templateDetails.__content,
+          styles: [],
+          scripts: [],
+        };
+      });**/
+    });
+
+    return Promise.all(partialFileReads);
   }
 }
 
