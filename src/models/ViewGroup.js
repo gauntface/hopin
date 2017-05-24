@@ -10,28 +10,34 @@ class ViewGroup extends View {
   }
 
   getViewDetails() {
+    console.log('Step 1');
     return Promise.all(
       this._views.map((view) => view.getViewDetails())
     )
     .then((viewDetails) => {
+      console.log('Step 2');
       return viewDetails.filter((viewDetail) => {
         return viewDetail ? true : false;
       });
     })
     .then((childViewDetails) => {
+      console.log('Step 3');
       return super.getViewDetails()
       .then((currentViewDetails) => {
+        console.log('Step 4');
         if (!currentViewDetails) {
           return '';
         }
 
+        console.log('Step 5');
         return this._generateRenderData(childViewDetails, currentViewDetails)
         .then((renderData) => {
+          console.log('Step 6');
           const renderedContent = mustache.render(
             currentViewDetails.template,
             renderData,
             currentViewDetails.partials);
-
+          console.log('Step 7');
           return {
             template: renderedContent,
             styles: renderData.getUsedStyles(),

@@ -2,7 +2,7 @@ const fs = require('fs-promise');
 const path = require('path');
 const yamlFront = require('yaml-front-matter');
 
-// const HopinError = require('../models/HopinError');
+const HopinError = require('../models/HopinError');
 
 class View {
   constructor(input) {
@@ -114,7 +114,7 @@ class View {
         });
       }
 
-      return this._readPartialFiles(templateDetails.partials)
+      return this._readPartialFiles(templateDetails.partials, templatePath)
       .then((partialDetails) => {
         let partialObject = {};
         partialDetails.forEach((partialDetail) => {
@@ -162,9 +162,14 @@ class View {
     return Promise.all(cssFileReads);
   }
 
-  _readPartialFiles(partials) {
+  _readPartialFiles(partials, templatePath) {
     const partialPaths = partials || [];
     const partialFileReads = partialPaths.map((partialPath) => {
+      if (templatePath === path.join(this._templateDir, partialPath)) {
+        throw new HopinError('partials-loop', {
+          template: templatePath,
+        });
+      }
       return this._readTemplate(path.join(this._templateDir, partialPath))
       .then((templateDetails) => {
         return {

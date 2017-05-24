@@ -24,4 +24,8 @@ module.exports = {
   'render-data-required': {
     message: `You must provide a data object to the render method.`,
   },
+  'partials-loop': {
+    message: (args) => `Found a partials loop for template: ` +
+      `'${args.template}'.`,
+  },
 };

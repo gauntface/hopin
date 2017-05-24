@@ -330,4 +330,31 @@ describe('View', function() {
       });
     });
   });
+
+  it('should handle partials loop', function() {
+    const TEMPLATE_DIR = `example/template/`;
+    const TEMPLATE_PATH = `path`;
+    const FRONT_MATTER = `---\npartials:\n- ${TEMPLATE_PATH}\n---`;
+    const EXAMPLE_TEMPLATE = 'Hello.';
+    const View = proxyquire('../../src/models/View', {
+      'fs-promise': {
+        readFile: (readPath) => {
+          if (readPath === path.join(TEMPLATE_DIR, TEMPLATE_PATH)) {
+            return Promise.resolve(new Buffer(FRONT_MATTER + EXAMPLE_TEMPLATE));
+          }
+          return Promise.reject(new Error('Injected error.'));
+        },
+      },
+    });
+    const view = new View({
+      templateDir: TEMPLATE_DIR,
+      templatePath: TEMPLATE_DIR + TEMPLATE_PATH,
+    });
+    return view.getViewDetails()
+    .then(() => {
+      throw new Error('Expected error to be thrown.');
+    }, (err) => {
+      expect(err.name).to.equal('partials-loop');
+    });
+  });
 });
