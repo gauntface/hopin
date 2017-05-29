@@ -18,7 +18,6 @@ class TemplateManager {
 
     this._relativePath = relativePath;
     this._templatePath = path.join(relativePath, 'templates');
-    this._staticPath = path.join(relativePath, 'static');
 
     this._templates = {};
   }
@@ -52,25 +51,25 @@ class TemplateManager {
     const viewObjects = renderInput.views || [];
 
     const parsedViews = viewObjects.map((viewObj) => {
+      viewObj.relativePath = this._relativePath;
       viewObj.templateDir = this._templatePath;
       viewObj.templatePath = path.join(
         this._templatePath, viewObj.templatePath);
-      viewObj.staticPath = this._staticPath;
       viewObj.partials = staticAssetPartials;
       return new View(viewObj);
     });
     const shellViewGroup = new ViewGroup({
+      relativePath: this._relativePath,
       templateDir: this._templatePath,
       templatePath: shellName,
-      staticPath: this._staticPath,
       views: parsedViews,
       partials: staticAssetPartials,
     });
 
     const documentViewGroup = new ViewGroup({
+      relativePath: this._relativePath,
       templateDir: this._templatePath,
       templatePath: documentName,
-      staticPath: this._staticPath,
       views: [shellViewGroup],
       partials: staticAssetPartials,
       styles: renderInput.styles,
@@ -80,88 +79,6 @@ class TemplateManager {
 
     return documentViewGroup.render();
     });
-
-    /** let shellPromise = Promise.resolve({});
-    if (data && data.shell) {
-      shellPromise = this.renderTemplate(
-        data.shell,
-        data
-      );
-    }
-
-    return shellPromise
-    .then((shellDetails) => {
-      const documentTemplatePath = data.document ? data.document :
-        'documents/html.tmpl';
-      return this.readTemplate(documentTemplatePath)
-      .then((templateDetails) => {
-        if (!templateDetails) {
-          throw new HopinError('template-not-found', {documentTemplatePath});
-        }
-
-        const seperatedStyles = {
-          inline: [],
-          async: [],
-        };
-        if (data.styles) {
-          data.styles.forEach((stylesheet) => {
-            const stylesheetPath = path.parse(stylesheet);
-            if (stylesheetPath.name.endsWith('-inline')) {
-              seperatedStyles.inline.push(stylesheet);
-            } else {
-              seperatedStyles.async.push(stylesheet);
-            }
-          });
-        }
-        if (shellDetails.styles) {
-          shellDetails.styles.forEach((stylesheet) => {
-            const stylesheetPath = path.parse(stylesheet);
-            if (stylesheetPath.name.endsWith('-inline')) {
-              seperatedStyles.inline.push(stylesheet);
-            } else {
-              seperatedStyles.async.push(stylesheet);
-            }
-          });
-        }
-        templateDetails.styles.forEach((stylesheet) => {
-          const stylesheetPath = path.parse(stylesheet);
-          if (stylesheetPath.name.endsWith('-inline')) {
-            seperatedStyles.inline.push(stylesheet);
-          } else {
-            seperatedStyles.async.push(stylesheet);
-          }
-        });
-
-        return Promise.all(seperatedStyles.inline.map((inlineStyle) => {
-          return fs.readFile(path.join(this._staticPath, inlineStyle))
-          .then((fileBuffer) => {
-            return fileBuffer.toString();
-          });
-        }))
-        .then((inlineStyles) => {
-          return {
-            templateDetails,
-            asyncStyles: seperatedStyles.async,
-            inlineStyles: inlineStyles,
-          };
-        });
-      })
-      .then(({templateDetails, asyncStyles, inlineStyles}) => {
-        const allScripts = templateDetails.scripts
-          .concat(shellDetails.scripts)
-          .concat(data.scripts);
-        return mustache.render(
-          templateDetails.content, {
-            data,
-            content: shellDetails.content,
-            styles: {
-              inline: inlineStyles,
-              async: asyncStyles,
-            },
-            scripts: allScripts,
-          });
-      });
-    });**/
   }
 
   renderTemplate(templatePath, data) {
@@ -293,7 +210,7 @@ class TemplateManager {
   }
 
   _getStaticAssets() {
-    const globPattern = path.join(this._staticPath, '**', '*.*');
+    const globPattern = path.join(this._relativePath, '**', '*.*');
     return new Promise((resolve, reject) => {
       glob(globPattern, (err, files) => {
         if (err) {

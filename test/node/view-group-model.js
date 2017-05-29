@@ -9,13 +9,13 @@ describe('View Group Model', function() {
             return Promise.resolve(new Buffer('view-1-template-content. '));
           } else if(fullPath === 'template-dir/view-2/example/view/template.tmpl') {
             return Promise.resolve(new Buffer('view-2-template-content. '));
-          } else if(fullPath === 'static-dir/view-1/styles/view-1-inline.css') {
+          } else if(fullPath === 'styles/view-1-inline.css') {
             return Promise.resolve(new Buffer('CONTENT::view-1-inline-styles'));
-          } else if(fullPath === 'static-dir/view-2/styles/view-2-inline.css') {
+          } else if(fullPath === 'styles/view-2-inline.css') {
             return Promise.resolve(new Buffer('CONTENT::view-2-inline-styles'));
           } else if(fullPath === 'template-dir/example/view/template.tmpl') {
             return Promise.resolve(new Buffer('template-contents. {{data.example}}. {{data.hello}}. {{{content}}}'));
-          } else if(fullPath === 'static-dir/styles/2-inline.css') {
+          } else if(fullPath === 'styles/2-inline.css') {
             return Promise.resolve(new Buffer('CONTENT::static-dir-styles-2-inline.css'));
           }
           return Promise.reject(new Error('Unknown template path: ' + fullPath));
@@ -28,9 +28,9 @@ describe('View Group Model', function() {
 
     const getViewOptions = (name) => {
       return {
+        relativePath: `.`,
         templateDir: `template-dir/${name}/`,
         templatePath: `template-dir/${name}/example/view/template.tmpl`,
-        staticPath: `static-dir/${name}/`,
         partials: {
           'template-dir/example-template-1':
             `example-template-1-content-${name}`,
@@ -56,9 +56,9 @@ describe('View Group Model', function() {
     const view2 = new View(getViewOptions('view-2'));
 
     const exampleViewGroup = new ViewGroup({
+      relativePath: `.`,
       templateDir: 'template-dir/',
       templatePath: 'template-dir/example/view/template.tmpl',
-      staticPath: 'static-dir/',
       views: [
         view1,
         view2,

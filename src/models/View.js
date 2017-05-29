@@ -6,9 +6,9 @@ const HopinError = require('../models/HopinError');
 
 class View {
   constructor(input) {
+    this._relativePath = input.relativePath;
     this._templateDir = input.templateDir;
     this._templatePath = input.templatePath;
-    this._staticPath = input.staticPath;
     this._additionalStyles = input.styles;
     this._additionalScripts = input.scripts;
     this._additionalPartials = input.partials;
@@ -153,7 +153,7 @@ class View {
 
   _readInlineCSSFiles(inlineStyles) {
     const cssFileReads = inlineStyles.map((inlineStyle) => {
-      return fs.readFile(path.join(this._staticPath, inlineStyle))
+      return fs.readFile(path.join(this._relativePath, inlineStyle))
       .then((fileBuffer) => {
         return fileBuffer.toString();
       });

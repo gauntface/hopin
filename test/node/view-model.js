@@ -55,13 +55,12 @@ describe('View', function() {
     const FRONT_MATTER = '---\nscripts:\n - /scripts/example.js\n - /scripts/example-sync.js\nstyles:\n - /styles/example.css\n - /styles/example-inline.css\n---';
     const EXAMPLE_TEMPLATE = 'Hello.';
     const TEMPLATE_PATH = 'example/template/path';
-    const STATIC_PATH = 'example/static/path';
     const View = proxyquire('../../src/models/View', {
       'fs-promise': {
         readFile: (readPath) => {
           if (readPath === TEMPLATE_PATH) {
             return Promise.resolve(new Buffer(FRONT_MATTER + EXAMPLE_TEMPLATE));
-          } else if (readPath === path.join(STATIC_PATH, 'styles/example-inline.css')) {
+          } else if (readPath === 'styles/example-inline.css') {
             return Promise.resolve(new Buffer('CONTENT::styles/example-inline.css'));
           }
           return Promise.reject(new Error('Injected error: ' + readPath));
@@ -69,8 +68,8 @@ describe('View', function() {
       },
     });
     const view = new View({
+      relativePath: '.',
       templatePath: TEMPLATE_PATH,
-      staticPath: STATIC_PATH,
     });
     return view.getViewDetails()
     .then((yamlData) => {
@@ -117,13 +116,12 @@ describe('View', function() {
     const FRONT_MATTER = '---\nscripts:\n - /scripts/example.js\n - /scripts/sync-example.js\n - /scripts/example-sync.js\nstyles:\n - /styles/example.css\n - /styles/inline-example.css\n - /styles/example-inline.css\n---';
     const EXAMPLE_TEMPLATE = 'Hello.';
     const TEMPLATE_PATH = 'example/template/path';
-    const STATIC_PATH = 'example/static/path';
     const View = proxyquire('../../src/models/View', {
       'fs-promise': {
         readFile: (readPath) => {
           if (readPath === TEMPLATE_PATH) {
             return Promise.resolve(new Buffer(FRONT_MATTER + EXAMPLE_TEMPLATE));
-          } else if (readPath === path.join(STATIC_PATH, 'styles/example-inline.css')) {
+          } else if (readPath === 'styles/example-inline.css') {
             return Promise.resolve(new Buffer('inlined-styles-from-example-inline.css'));
           }
           return Promise.reject(new Error('Injected error.'));
@@ -131,7 +129,7 @@ describe('View', function() {
       },
     });
     const view = new View({
-      staticPath: STATIC_PATH,
+      relativePath: '.',
       templatePath: TEMPLATE_PATH,
     });
     return view.getViewDetails()
@@ -288,7 +286,6 @@ describe('View', function() {
     const EXAMPLE_TEMPLATE = `${getYaml('top-level-view')}Hello, {{> static/example-partial.html}}.`;
     const TEMPLATE_DIR = 'example/template-dir/path';
     const TEMPLATE_PATH = 'example/template/path';
-    const STATIC_DIR = 'example/static/path';
     const View = proxyquire('../../src/models/View', {
       'fs-promise': {
         readFile: (readPath) => {
@@ -298,9 +295,9 @@ describe('View', function() {
             return Promise.resolve(new Buffer(`${getYaml('partial-1')}top-level-contents. {{> partials/partial-1.html}}`));
           } else if(readPath === path.join(TEMPLATE_DIR, 'partials/partial-1.html')) {
             return Promise.resolve(new Buffer('---\nstyles:\n - styles/partial-1.css\nscripts:\n - scripts/partial-1.js\n---example-partial-1-file-contents.'));
-          } else if (readPath === path.join(STATIC_DIR, 'styles/top-level-view-inline.css')) {
+          } else if (readPath === 'styles/top-level-view-inline.css') {
             return Promise.resolve(new Buffer('CONTENTS::top-level-view-inline.css'));
-          } else if (readPath === path.join(STATIC_DIR, 'styles/partial-1-inline.css')) {
+          } else if (readPath === 'styles/partial-1-inline.css') {
             return Promise.resolve(new Buffer('CONTENTS::partial-1-inline.css'));
           }
           return Promise.reject(new Error('Injected error. ' + readPath));
@@ -308,9 +305,9 @@ describe('View', function() {
       },
     });
     const view = new View({
+      relativePath: '.',
       templateDir: TEMPLATE_DIR,
       templatePath: TEMPLATE_PATH,
-      staticPath: STATIC_DIR,
     });
     return view.getViewDetails()
     .then((renderResult) => {

@@ -8,20 +8,25 @@ class Hopin {
     this._relativePath = relativePath;
 
     this._app = express();
+    this._server = null;
 
     this._router = new Router({relativePath});
   }
 
   startServer(port) {
-    this._app.use(express.static(path.join(this._relativePath, 'static')));
+    this._app.use(express.static(path.join(this._relativePath, 'public')));
 
     this._app.use('/', this._router.routes);
 
     return new Promise((resolve, reject) => {
-      const server = this._app.listen(port, () => {
-        resolve(server.address());
+      this._server = this._app.listen(port, () => {
+        resolve(this._server.address());
       });
     });
+  }
+
+  stopServer() {
+    return new Promise((resolve) => this._server.close(resolve));
   }
 }
 

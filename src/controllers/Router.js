@@ -69,6 +69,7 @@ class Router {
     const controller = parsedUrl.controller || 'Home';
     const action = parsedUrl.action || 'index';
     const type = parsedUrl.type || 'html';
+    const urlSegments = parsedUrl.args || {};
 
     return this._findController(controller)
     .then((matchingController) => {
@@ -81,10 +82,10 @@ class Router {
             }));
           }
 
-          return matchingController['index']({request, type});
+          return matchingController['index']({request, type, urlSegments});
         });
       }
-      return matchingController[action]({request, type});
+      return matchingController[action]({request, type, urlSegments});
     })
     .then((controllerResponse) => {
       return {

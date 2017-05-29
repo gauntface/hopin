@@ -28,7 +28,7 @@ describe('Test Express Usage', function() {
   it('should pass calls to router', function() {
     const Hopin = require('../../src/index');
     const server = new Hopin({
-      relativePath: path.join(__dirname, '..', 'static', 'basic-example'),
+      relativePath: path.join(__dirname, '..', 'static-examples', 'basic-example'),
     });
     return server.startServer(3000)
     .then((addressInfo) => {

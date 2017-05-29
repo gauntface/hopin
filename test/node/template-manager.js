@@ -549,13 +549,13 @@ describe('Template Manager', function() {
               let content = `${getFrontMatter('document')}\n{{#styles.inline}}{{{.}}}\n{{/styles.inline}}{{#styles.async}}{{{.}}}\n{{/styles.async}}{{#scripts.async}}{{{.}}}\n{{/scripts.async}}{{#scripts.sync}}{{{.}}}\n{{/scripts.sync}}Hello Document. {{{content}}}`;
               return Promise.resolve(new Buffer(content));
             }
-            case 'static/styles/view/example-inline.css': {
+            case 'styles/view/example-inline.css': {
               return Promise.resolve(new Buffer('view-css-here'));
             }
-            case 'static/styles/shell/example-inline.css': {
+            case 'styles/shell/example-inline.css': {
               return Promise.resolve(new Buffer('shell-css-here'));
             }
-            case 'static/styles/document/example-inline.css': {
+            case 'styles/document/example-inline.css': {
               return Promise.resolve(new Buffer('document-css-here'));
             }
           }
@@ -622,13 +622,13 @@ Hello Document. Hello Shell. Hello 1.`);
               let content = `${getFrontMatter('document')}{{#styles.inline}}{{{.}}}\n{{/styles.inline}}{{#styles.async}}{{{.}}}\n{{/styles.async}}{{#scripts.sync}}{{{.}}}\n{{/scripts.sync}}{{#scripts.async}}{{{.}}}\n{{/scripts.async}}Hello Document. {{{content}}}`;
               return Promise.resolve(new Buffer(content));
             }
-            case 'static/styles/additional-1/example-inline.css': {
+            case 'styles/additional-1/example-inline.css': {
               return Promise.resolve(new Buffer('CONTENTS::additional-1/example-inline.css'));
             }
-            case 'static/styles/additional-2/example-inline.css': {
+            case 'styles/additional-2/example-inline.css': {
               return Promise.resolve(new Buffer('CONTENTS::additional-2/example-inline.css'));
             }
-            case 'static/styles/document/example-inline.css': {
+            case 'styles/document/example-inline.css': {
               return Promise.resolve(new Buffer('CONTENTS::document/example-inline.css'));
             }
           }
@@ -765,13 +765,13 @@ Hello Document. Hello View.`);
               let content = `${getFrontMatter('document')}{{#styles.inline}}{{{.}}}\n{{/styles.inline}}{{#styles.async}}{{{.}}}\n{{/styles.async}}{{#scripts.sync}}{{{.}}}\n{{/scripts.sync}}{{#scripts.async}}{{{.}}}\n{{/scripts.async}}Hello Document. {{{content}}}`;
               return Promise.resolve(new Buffer(content));
             }
-            case 'static/styles/view/example-inline.css': {
+            case 'styles/view/example-inline.css': {
               return Promise.resolve(new Buffer('view/example-inline.css'));
             }
-            case 'static/styles/shell/example-inline.css': {
+            case 'styles/shell/example-inline.css': {
               return Promise.resolve(new Buffer('shell/example-inline.css'));
             }
-            case 'static/styles/document/example-inline.css': {
+            case 'styles/document/example-inline.css': {
               return Promise.resolve(new Buffer('document/example-inline.css'));
             }
           }
@@ -876,7 +876,7 @@ Hello Document. Hello Shell. Hello 1.`);
           const relPath = path.relative(TEMPLATE_PATH, fullPath);
           switch(relPath) {
             case path.join('templates', PATH_1): {
-              let content = `---\npartials:\n - normal-partial/example-partial.html\n---Hello, {{> normal-partial/example-partial.html}} {{> static/example-partial.html}}.`;
+              let content = `---\npartials:\n - normal-partial/example-partial.html\n---Hello, {{> normal-partial/example-partial.html}} {{> random-path/example-partial.html}}.`;
               return Promise.resolve(new Buffer(content));
             }
             case path.join('templates', 'documents/html.tmpl'): {
@@ -898,9 +898,9 @@ Hello Document. Hello Shell. Hello 1.`);
       '../models/View': View,
       '../models/ViewGroup': ViewGroup,
       'glob': (globPattern, cb) => {
-        globPattern.should.equal('tmpl-path/static/**/*.*');
+        globPattern.should.equal('tmpl-path/**/*.*');
         cb(null, [
-          'tmpl-path/static/example-partial.html',
+          'tmpl-path/random-path/example-partial.html',
         ]);
       },
       'fs-promise': {
@@ -912,7 +912,7 @@ Hello Document. Hello Shell. Hello 1.`);
           });
         },
         readFile: () => {
-          return Promise.resolve(new Buffer('Static Partial Contents'));
+          return Promise.resolve(new Buffer('Random Path Partial Contents'));
         },
       },
     });
@@ -928,7 +928,7 @@ Hello Document. Hello Shell. Hello 1.`);
       ],
     })
     .then((templateResult) => {
-      templateResult.should.equal(`Hello, Normal Partial Contents Static Partial Contents.`);
+      templateResult.should.equal(`Hello, Normal Partial Contents Random Path Partial Contents.`);
     });
   });
 
@@ -969,7 +969,7 @@ Hello Document. Hello Shell. Hello 1.`);
       '../models/View': View,
       '../models/ViewGroup': ViewGroup,
       'glob': (globPattern, cb) => {
-        globPattern.should.equal('tmpl-path/static/**/*.*');
+        globPattern.should.equal('tmpl-path/**/*.*');
         cb(null, [
           'tmpl-path/static/example-partial.html',
         ]);
@@ -1037,7 +1037,7 @@ Hello Document. Hello Shell. Hello 1.`);
       '../models/View': View,
       '../models/ViewGroup': ViewGroup,
       'glob': (globPattern, cb) => {
-        globPattern.should.equal('tmpl-path/static/**/*.*');
+        globPattern.should.equal('tmpl-path/**/*.*');
         cb(null, [
           'tmpl-path/static/example-partial.html',
         ]);
