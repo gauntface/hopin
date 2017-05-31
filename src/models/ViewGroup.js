@@ -49,17 +49,20 @@ class ViewGroup extends View {
   }
 
   _generateRenderData(childViewDetails, currentView) {
+    let stylesToInclude = currentView.styles;
+    let scriptsToInclude = currentView.scripts;
     const renderData = {
       data: currentView.data,
-      styles: currentView.styles,
-      scripts: currentView.scripts,
+      styles: stylesToInclude,
+      scripts: scriptsToInclude,
       getUsedStyles: () => {
-        return renderData['styles'];
+        return stylesToInclude;
       },
       getUsedScripts: () => {
-        return renderData['scripts'];
+        return scriptsToInclude;
       },
     };
+
     renderData['content'] = () => {
       if (!childViewDetails) {
         return '';
@@ -67,6 +70,16 @@ class ViewGroup extends View {
 
       let contentString = '';
       childViewDetails.forEach((details) => {
+        stylesToInclude.inline =
+          stylesToInclude.inline.concat(details.styles.inline);
+        stylesToInclude.async =
+          stylesToInclude.async.concat(details.styles.async);
+
+        scriptsToInclude.sync =
+          scriptsToInclude.sync.concat(details.scripts.sync);
+        scriptsToInclude.async =
+          scriptsToInclude.async.concat(details.scripts.async);
+
         contentString += mustache.render(details.template, {
           data: details.data,
         }, details.partials);

@@ -100,8 +100,8 @@ class View {
         });
       }
 
-      const asyncScripts = [];
-      const syncScripts = [];
+      let asyncScripts = [];
+      let syncScripts = [];
 
       if (templateDetails.scripts) {
         templateDetails.scripts.forEach((script) => {
@@ -118,18 +118,27 @@ class View {
       .then((partialDetails) => {
         let partialObject = {};
         partialDetails.forEach((partialDetail) => {
-          partialObject[partialDetail.path] =
-            partialDetail.templateDetails.template;
+          const templateDetails = partialDetail.templateDetails;
+          partialObject[partialDetail.path] = templateDetails.template;
+
+          inlineStyles = inlineStyles.concat(templateDetails.styles.inline);
+          asyncStyles = asyncStyles.concat(templateDetails.styles.async);
+
+          syncScripts = syncScripts.concat(templateDetails.scripts.sync);
+          asyncScripts = asyncScripts.concat(templateDetails.scripts.async);
 
           // Include nested partials.
-          const partialKeys = Object.keys(
-            partialDetail.templateDetails.partials);
+          /** const partialKeys = Object.keys(templateDetails.partials);
           partialKeys.forEach((partialKey) => {
             const pTemplate = partialDetail.templateDetails;
             partialObject[partialKey] = pTemplate.partials[partialKey];
+
             inlineStyles = inlineStyles.concat(pTemplate.styles.inline);
             asyncStyles = asyncStyles.concat(pTemplate.styles.async);
-          });
+
+            syncScripts = syncScripts.concat(pTemplate.scripts.sync);
+            asyncScripts = asyncScripts.concat(pTemplate.scripts.async);
+          });**/
         });
 
         // This is the template with yaml front matter parsed out
@@ -177,18 +186,6 @@ class View {
           templateDetails: templateDetails,
         };
       });
-      /** return fs.readFile(path.join(this._templateDir, partialPath))
-      .then((fileBuffer) => {
-        return yamlFront.loadFront(fileBuffer.toString());
-      })
-      .then((templateDetails) => {
-        return {
-          path: partialPath,
-          content: templateDetails.__content,
-          styles: [],
-          scripts: [],
-        };
-      });**/
     });
 
     return Promise.all(partialFileReads);
