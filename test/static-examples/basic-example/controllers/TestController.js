@@ -9,7 +9,23 @@ class TestController {
 
   basicview() {
     return {
-      path: 'templates/view.tmpl',
+      templatePath: 'templates/view.tmpl',
+      views: [
+        {
+          templatePath: 'templates/view-1.tmpl',
+          views: [
+            {
+              templatePath: 'templates/view-2.tmpl',
+            },
+          ],
+        },
+        {
+          templatePath: 'templates/view-3.tmpl',
+          data: {
+            oh: 'hai',
+          },
+        },
+      ],
     };
   }
 }

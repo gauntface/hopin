@@ -206,13 +206,13 @@ class TempView {
 }
 
 class ViewFactory {
-  static _handlePartials(parentTempView) {
+  static _handlePartials(relativePath, parentTempView) {
     return parentTempView.partialPaths.reduce((promiseChain, partialPath) => {
       const origViewPath = path.dirname(parentTempView.fullPath);
-      const relativePath = path.join(origViewPath, partialPath);
+      const partialRelativePath = path.join(origViewPath, partialPath);
 
       return promiseChain.then(() => {
-        return ViewFactory._createTempView(relativePath);
+        return ViewFactory._createTempView(relativePath, partialRelativePath);
       })
       .then((partialTempView) => {
         parentTempView.addPartial(partialPath, partialTempView);
@@ -223,14 +223,14 @@ class ViewFactory {
     });
   }
 
-  static _handleChildViews(parentTempView, childViews) {
+  static _handleChildViews(relativePath, parentTempView, childViews) {
     if (!childViews || childViews.length === 0) {
       return parentTempView;
     }
 
     return Promise.all(childViews.map((childView) => {
       return ViewFactory._createTempView(
-        childView.templatePath, childView.views, childView.data);
+        relativePath, childView.templatePath, childView.views, childView.data);
     }))
     .then((childTempViews) => {
       childTempViews.forEach((childTempView) => {
@@ -241,8 +241,12 @@ class ViewFactory {
     });
   }
 
-  static _createTempView(viewPath, childViews, data) {
-    return fsExtra.readFile(viewPath)
+  static _createTempView(relativePath, viewPath, childViews, data) {
+    let readPath = viewPath;
+    if (!path.isAbsolute(viewPath)) {
+      readPath = path.join(relativePath, viewPath);
+    }
+    return fsExtra.readFile(readPath)
     .then((fileContentsBuffer) => {
       return fileContentsBuffer.toString();
     })
@@ -250,15 +254,15 @@ class ViewFactory {
       return yamlFront.loadFront(fileContents);
     })
     .then((parsedYamlData) => {
-      const tempView = new TempView(viewPath, data);
+      const tempView = new TempView(readPath, data);
       tempView.setContent(parsedYamlData.__content.trim());
       tempView.addPartialPaths(parsedYamlData.partials);
       tempView.readDataIntoSets(parsedYamlData);
 
-      return ViewFactory._handlePartials(tempView);
+      return ViewFactory._handlePartials(relativePath, tempView);
     })
     .then((tempView) => {
-      return ViewFactory._handleChildViews(tempView, childViews);
+      return ViewFactory._handleChildViews(relativePath, tempView, childViews);
     });
   }
 
@@ -278,15 +282,16 @@ class ViewFactory {
     );
   }
 
-  static _generateCollapsedViewGroup(viewPath, childViews, data) {
-    return ViewFactory._createTempView(viewPath, childViews, data)
+  static _generateCollapsedViewGroup(relativePath, viewPath, childViews, data) {
+    return ViewFactory._createTempView(relativePath, viewPath, childViews, data)
     .then((parentTempView) => {
       return parentTempView.collapse();
     });
   }
 
-  static renderViewGroup(viewPath, childViews, data) {
-    return ViewFactory._generateCollapsedViewGroup(viewPath, childViews, data)
+  static renderViewGroup(relativePath, viewPath, childViews, data) {
+    return ViewFactory._generateCollapsedViewGroup(
+      relativePath, viewPath, childViews, data)
     .then((collapsedParentView) => {
       return ViewFactory._renderCollapsedView(collapsedParentView);
     });

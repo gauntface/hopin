@@ -40,7 +40,7 @@ describe('Test Express Usage', function() {
       expectedResult: 'basic-example:test:action',
     }, {
       url: `/test/basicview`,
-      expectedResult: '',
+      expectedResult: 'content::view content::view-1 content::view-2content::view-3 hai',
     },
   ];
   const testTypeUrls = [

@@ -4,6 +4,7 @@ const express = require('express');
 const pathToRegex = require('path-to-regexp');
 
 // const TemplateManager = require('./TemplateManager');
+const ViewFactory = require('../factory/view-factory');
 const HopinError = require('../models/HopinError');
 const parseUrl = require('../utils/parse-url');
 const toTitleCase = require('../utils/title-case');
@@ -145,16 +146,24 @@ class Router {
     this._expressRouter.all('*', (req, res, next) => {
       return this.route(req.url, req)
       .then((args) => {
+        const controllerResponse = args.controllerResponse;
+
         let contentPromise;
-        if (typeof args.controllerResponse === 'string') {
-          contentPromise = Promise.resolve(args.controllerResponse);
-        } else if(args.controllerResponse.content) {
-          contentPromise = Promise.resolve(args.content);
+        if (typeof controllerResponse === 'string') {
+          contentPromise = Promise.resolve(controllerResponse);
+        } else if(controllerResponse.content) {
+          contentPromise = Promise.resolve(controllerResponse.content);
         } else {
           // TODO: Replace this with ViewFactory.
           /** contentPromise = this._templateManager.render(
             args.controllerResponse
           );**/
+
+          contentPromise = ViewFactory.renderViewGroup(
+            this._relativePath,
+            controllerResponse.templatePath,
+            controllerResponse.views,
+            controllerResponse.data);
         }
 
         return contentPromise.then((content) => {
