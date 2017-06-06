@@ -414,4 +414,21 @@ second-level
 world`);
     });
   });
+
+  it('should be able to render the styles and scripts', function() {
+    const examplePath = path.join(__dirname, '../static-examples/view-examples/document-example/');
+    return ViewFactory.renderViewGroup(examplePath, 'document.tmpl')
+    .then((renderedDocument) => {
+      expect(renderedDocument).to.equal(
+`<style>content::styles/example-inline.css
+</style>
+<link src="/styles/example-sync.css" />
+'/styles/example-async.css',
+<script>content::scripts/example-inline.js
+</script>
+<script src="/scripts/example-sync.js"></script>
+<script src="/scripts/example-async.js" async defer></script>
+`);
+    });
+  });
 });

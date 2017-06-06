@@ -1,0 +1,34 @@
+---
+styles:
+  inline:
+    - ./styles/example-inline.css
+  sync:
+    - /styles/example-sync.css
+  async:
+    - /styles/example-async.css
+scripts:
+  inline:
+    - ./scripts/example-inline.js
+  sync:
+    - /scripts/example-sync.js
+  async:
+    - /scripts/example-async.js
+---
+{{#styles.inline}}
+<style>{{{.}}}</style>
+{{/styles.inline}}
+{{#styles.sync}}
+<link src="{{{.}}}" />
+{{/styles.sync}}
+{{#styles.async}}
+'{{{.}}}',
+{{/styles.async}}
+{{#scripts.inline}}
+<script>{{{.}}}</script>
+{{/scripts.inline}}
+{{#scripts.sync}}
+<script src="{{{.}}}"></script>
+{{/scripts.sync}}
+{{#scripts.async}}
+<script src="{{{.}}}" async defer></script>
+{{/scripts.async}}

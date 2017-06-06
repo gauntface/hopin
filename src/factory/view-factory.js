@@ -277,6 +277,8 @@ class ViewFactory {
             }, '');
         },
         data: collapsedView.data,
+        styles: collapsedView.styles,
+        scripts: collapsedView.scripts,
       },
       collapsedView.partialContents
     );
@@ -289,9 +291,42 @@ class ViewFactory {
     });
   }
 
+  static _fetchInlineAssets(collapsedView) {
+    const inlineStylesPaths = collapsedView.styles.inline;
+    const inlineScriptPaths = collapsedView.scripts.inline;
+
+    const inlineStylesPromise = Promise.all(
+      inlineStylesPaths.map((inlinePath) => {
+        return fsExtra.readFile(inlinePath)
+        .then((content) => {
+          return content.toString();
+        });
+      })
+    );
+
+    const inlineScriptsPromise = Promise.all(
+      inlineScriptPaths.map((inlinePath) => {
+        return fsExtra.readFile(inlinePath)
+        .then((content) => {
+          return content.toString();
+        });
+      })
+    );
+
+    return Promise.all([inlineStylesPromise, inlineScriptsPromise])
+    .then((results) => {
+      collapsedView.styles.inline = results[0];
+      collapsedView.scripts.inline = results[1];
+      return collapsedView;
+    });
+  }
+
   static renderViewGroup(relativePath, viewPath, childViews, data) {
     return ViewFactory._generateCollapsedViewGroup(
       relativePath, viewPath, childViews, data)
+    .then((collapsedParentView) => {
+      return ViewFactory._fetchInlineAssets(collapsedParentView);
+    })
     .then((collapsedParentView) => {
       return ViewFactory._renderCollapsedView(collapsedParentView);
     });
