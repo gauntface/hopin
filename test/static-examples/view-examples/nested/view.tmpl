@@ -1,0 +1,26 @@
+---
+styles:
+  inline:
+    - ./styles/example-1.css
+    - ./styles/example-2.css
+  sync:
+    - /styles/example-1.css
+    - /styles/example-2.css
+  async:
+    - /styles/example-1.css
+    - /styles/example-2.css
+scripts:
+  inline:
+    - ./scripts/example-1.js
+    - ./scripts/example-2.js
+  sync:
+    - /scripts/example-1.js
+    - /scripts/example-2.js
+  async:
+    - /scripts/example-1.js
+    - /scripts/example-2.js
+partials:
+  - ./partials/example-1.tmpl
+  - ./partials/example-2.tmpl
+---
+contents::view-example-1. {{> ./partials/example-1.tmpl}} {{> ./partials/example-2.tmpl}} {{ data.hello }}

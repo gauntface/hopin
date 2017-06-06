@@ -1,5 +1,6 @@
 const path = require('path');
 const fetch = require('node-fetch');
+const clearRequire = require('clear-require');
 
 require('chai').should();
 
@@ -25,30 +26,60 @@ const testContentType = (route, expectedType) => {
 };
 
 describe('Test Express Usage', function() {
-  it('should pass calls to router', function() {
+  let server;
+  let serverUrl;
+  const testContentUrls = [
+    {
+      url: `/`,
+      expectedResult: 'basic-example:home',
+    }, {
+      url: `/test`,
+      expectedResult: 'basic-example:test',
+    }, {
+      url: `/test/action`,
+      expectedResult: 'basic-example:test:action',
+    }, {
+      url: `/test/basicview`,
+      expectedResult: '',
+    },
+  ];
+  const testTypeUrls = [
+    {
+      url: `/contenttype/`,
+      expectedResult: 'text/html',
+    }, {
+      url: `/contenttype/json`,
+      expectedResult: 'application/json',
+    }, {
+      url: `/contenttype/custom`,
+      expectedResult: 'text/madeup',
+    },
+  ];
+
+  before(function() {
+    clearRequire('../../src/index');
     const Hopin = require('../../src/index');
-    const server = new Hopin({
+    server = new Hopin({
       relativePath: path.join(__dirname, '..', 'static-examples', 'basic-example'),
     });
-    return server.startServer(3000)
-    .then((addressInfo) => {
-      const serverUrl = `http://localhost:${addressInfo.port}`;
-      return testRoute(`${serverUrl}/`, 'basic-example:home')
-      .then(() => {
-        return testRoute(`${serverUrl}/test`, 'basic-example:test');
-      })
-      .then(() => {
-        return testRoute(`${serverUrl}/test/action`, 'basic-example:test:action');
-      })
-      .then(() => {
-        return testContentType(`${serverUrl}/contenttype/`, 'text/html');
-      })
-      .then(() => {
-        return testContentType(`${serverUrl}/contenttype/json`, 'application/json');
-      })
-      .then(() => {
-        return testContentType(`${serverUrl}/contenttype/custom`, 'text/madeup');
-      });
+    serverUrl = `http://localhost:${3000}`;
+
+    return server.startServer(3000);
+  });
+
+  after(function() {
+    return server.stopServer();
+  });
+
+  testContentUrls.forEach((singleEntry) => {
+    it(`should be able to route ${singleEntry.url}`, function() {
+      return testRoute(`${serverUrl}${singleEntry.url}`, singleEntry.expectedResult);
+    });
+  });
+
+  testTypeUrls.forEach((singleEntry) => {
+    it(`should be able to get correct response type ${singleEntry.url}`, function() {
+      return testContentType(`${serverUrl}${singleEntry.url}`, singleEntry.expectedResult);
     });
   });
 });

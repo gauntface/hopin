@@ -28,4 +28,9 @@ module.exports = {
     message: (args) => `Found a partials loop for template: ` +
       `'${args.template}'.`,
   },
+  'duplicate-partial-name': {
+    message: (args) => `Two partials have been referenced in the same view ` +
+      `tree. Please rename the partials or use relative paths for: ` +
+      `'${args.partialPath}'.`,
+  },
 };

@@ -6,6 +6,12 @@ class TestController {
   action() {
     return 'basic-example:test:action';
   }
+
+  basicview() {
+    return {
+      path: 'templates/view.tmpl',
+    };
+  }
 }
 
 module.exports = new TestController();

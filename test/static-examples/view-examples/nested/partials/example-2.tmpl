@@ -1,0 +1,15 @@
+---
+scripts:
+  inline:
+    - ../scripts/example-3.js
+    - ../scripts/example-4.js
+  sync:
+    - /scripts/example-3.js
+    - /scripts/example-4.js
+  async:
+    - /scripts/example-3.js
+    - /scripts/example-4.js
+partials:
+  - example-3.tmpl
+---
+content::partials-example-2.{{> example-3.tmpl}}

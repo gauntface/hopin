@@ -16,7 +16,7 @@ class ContenttypeController {
   custom() {
     return {
       type: 'custom',
-      content: 'content-type:json',
+      content: 'content-type:custom',
     };
   }
 }

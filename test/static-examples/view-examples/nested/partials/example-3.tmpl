@@ -1,0 +1,25 @@
+---
+styles:
+  inline:
+    - ../styles/example-5.css
+    - ../styles/example-6.css
+  sync:
+    - /styles/example-5.css
+    - /styles/example-6.css
+  async:
+    - /styles/example-5.css
+    - /styles/example-6.css
+scripts:
+  inline:
+    - ../scripts/example-5.js
+    - ../scripts/example-6.js
+  sync:
+    - /scripts/example-5.js
+    - /scripts/example-6.js
+  async:
+    - /scripts/example-5.js
+    - /scripts/example-6.js
+partials:
+  - ./example-4.tmpl
+---
+content::partials-example-3.{{> ./example-4.tmpl}}

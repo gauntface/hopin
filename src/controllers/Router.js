@@ -3,12 +3,13 @@ const fs = require('mz/fs');
 const express = require('express');
 const pathToRegex = require('path-to-regexp');
 
-const TemplateManager = require('./TemplateManager');
+// const TemplateManager = require('./TemplateManager');
 const HopinError = require('../models/HopinError');
 const parseUrl = require('../utils/parse-url');
 const toTitleCase = require('../utils/title-case');
 
 const DEFAULT_TYPES = {
+  html: 'text/html',
   js: 'application/javascript',
   json: 'application/json',
   xml: 'application/xml',
@@ -17,7 +18,7 @@ const DEFAULT_TYPES = {
 class Router {
   constructor({relativePath}) {
     this._relativePath = relativePath;
-    this._templateManager = new TemplateManager({relativePath});
+    // this._templateManager = new TemplateManager({relativePath});
     this._customRoutes = this._getCustomRoutes(this._relativePath);
     this._customTypes = this._getCustomTypes(this._relativePath);
 
@@ -137,47 +138,8 @@ class Router {
   }
 
   _configureExpressRoutes() {
-    // this._addHopinDataRoute();
-    // this._addCustomRoutes();
     this._addDefaultRoutes();
-
-    // this._expressRouter.all('*', (req, res, next) => {
-    //   console.log(req._hopin);
-    //   next();
-    // });
-
-    // TODO: Find way to manually throw things at our custom Router / express
-    // combo.....i.e. expressRouter.route('/home/index.html');
   }
-
-  /** _addHopinDataRoute() {
-    this._expressRouter.use((req, res, next) => {
-      req._hopin = {
-        originalUrl: req.url,
-        matches: [],
-      };
-      next();
-    });
-  }
-
-  _addCustomRoutes() {
-    const customRoutes = this._getCustomRoutes(this._relativePath);
-
-    Object.keys(customRoutes).forEach((customRouteKey) => {
-      const customRouteValue = customRoutes[customRouteKey];
-      this._expressRouter.all(customRouteKey, (req, res, next) => {
-        req._hopin.matches.push({
-          originalMatch: customRouteKey,
-          redirectedRoute: customRouteValue,
-        });
-
-        // TODO: Make express convert regex to full URL -> params....?
-        // req.url = express.exec(customRouteValue, req.params);
-
-        next();
-      });
-    });
-  }**/
 
   _addDefaultRoutes() {
     this._expressRouter.all('*', (req, res, next) => {
@@ -186,10 +148,13 @@ class Router {
         let contentPromise;
         if (typeof args.controllerResponse === 'string') {
           contentPromise = Promise.resolve(args.controllerResponse);
+        } else if(args.controllerResponse.content) {
+          contentPromise = Promise.resolve(args.content);
         } else {
-          contentPromise = this._templateManager.render(
+          // TODO: Replace this with ViewFactory.
+          /** contentPromise = this._templateManager.render(
             args.controllerResponse
-          );
+          );**/
         }
 
         return contentPromise.then((content) => {
