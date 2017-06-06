@@ -6,11 +6,13 @@ const mustache = require('mustache');
 const HopinError = require('../models/HopinError');
 
 class TempView {
-  constructor(fullPath) {
+  constructor(fullPath, data) {
     this._fullPath = fullPath;
+    this._data = data;
     this._content = null;
     this._partialPaths = [];
     this._partialContents = {};
+    this._tempViews = [];
     this._dataSets = {
       'styles-inline': {
         dataStructure: ['styles', 'inline'],
@@ -112,6 +114,11 @@ class TempView {
     this.mergeData(partialTempView);
   }
 
+  addChildView(childTempView) {
+    this._tempViews.push(childTempView);
+    this.mergeData(childTempView);
+  }
+
   mergeData(tempView) {
     Object.keys(this._dataSets).forEach((dataSetKey) => {
       const dataSet = this._dataSets[dataSetKey];
@@ -130,6 +137,9 @@ class TempView {
     const collapsedObject = {};
     collapsedObject.content = this.content;
     collapsedObject.partialContents = this._partialContents;
+    if (this.data) {
+      collapsedObject.data = this.data;
+    }
 
     Object.keys(this.dataSets).forEach((dataSetKey) => {
       const dataSet = this.dataSets[dataSetKey];
@@ -148,6 +158,23 @@ class TempView {
 
         return objectToAlter[structureSegment];
       }, collapsedObject);
+    });
+
+    collapsedObject.views = [];
+    this._tempViews.forEach((tempView) => {
+      const tempViewCollapsed = tempView.collapse();
+
+      const childView = {
+        content: tempViewCollapsed.content,
+        partialContents: tempViewCollapsed.partialContents,
+        views: tempViewCollapsed.views,
+      };
+
+      if (tempViewCollapsed.data) {
+        childView.data = tempViewCollapsed.data;
+      }
+
+      collapsedObject.views.push(childView);
     });
 
     return collapsedObject;
@@ -172,6 +199,10 @@ class TempView {
   get dataSets() {
     return this._dataSets;
   }
+
+  get data() {
+    return this._data;
+  }
 }
 
 class ViewFactory {
@@ -192,7 +223,25 @@ class ViewFactory {
     });
   }
 
-  static _createTempView(viewPath) {
+  static _handleChildViews(parentTempView, childViews) {
+    if (!childViews || childViews.length === 0) {
+      return parentTempView;
+    }
+
+    return Promise.all(childViews.map((childView) => {
+      return ViewFactory._createTempView(
+        childView.templatePath, childView.views, childView.data);
+    }))
+    .then((childTempViews) => {
+      childTempViews.forEach((childTempView) => {
+        parentTempView.addChildView(childTempView);
+      });
+
+      return parentTempView;
+    });
+  }
+
+  static _createTempView(viewPath, childViews, data) {
     return fsExtra.readFile(viewPath)
     .then((fileContentsBuffer) => {
       return fileContentsBuffer.toString();
@@ -201,80 +250,45 @@ class ViewFactory {
       return yamlFront.loadFront(fileContents);
     })
     .then((parsedYamlData) => {
-      const tempView = new TempView(viewPath);
+      const tempView = new TempView(viewPath, data);
       tempView.setContent(parsedYamlData.__content.trim());
       tempView.addPartialPaths(parsedYamlData.partials);
       tempView.readDataIntoSets(parsedYamlData);
 
       return ViewFactory._handlePartials(tempView);
+    })
+    .then((tempView) => {
+      return ViewFactory._handleChildViews(tempView, childViews);
     });
   }
 
-  static _generateCollapsedView(viewPath) {
-    return ViewFactory._createTempView(viewPath)
-    .then((finalTempView) => {
-      return finalTempView.collapse();
-    });
+  static _renderCollapsedView(collapsedView) {
+    return mustache.render(
+      collapsedView.content,
+      {
+        content: () => {
+          return collapsedView.views.reduce(
+            (contentString, view) => {
+              return contentString += ViewFactory._renderCollapsedView(view);
+            }, '');
+        },
+        data: collapsedView.data,
+      },
+      collapsedView.partialContents
+    );
   }
 
-  static _renderCollapsedView(collapsedView, data) {
-    return new Promise((resolve, reject) => {
-      try {
-        const contentString = mustache.render(
-        collapsedView.content,
-        data,
-        collapsedView.partialContents
-      );
-      resolve(contentString);
-      } catch (err) {
-        reject(err);
-      }
-    });
-  }
-
-  static renderView(viewPath, data) {
-    return ViewFactory._generateCollapsedView(viewPath)
-    .then((collapsedView) => {
-      return ViewFactory._renderCollapsedView(collapsedView, {data});
-    });
-  }
-
-  static _generateCollapsedViewGroup(viewPath, childViews) {
-    return ViewFactory._createTempView(viewPath)
+  static _generateCollapsedViewGroup(viewPath, childViews, data) {
+    return ViewFactory._createTempView(viewPath, childViews, data)
     .then((parentTempView) => {
-      return Promise.all(childViews.map((childView) => {
-        return ViewFactory._createTempView(childView.templatePath)
-        .then((tempChildView) => {
-          parentTempView.mergeData(tempChildView);
-
-
-          return ViewFactory._renderCollapsedView(tempChildView.collapse(), {
-            data: childView.data,
-          });
-        });
-      }))
-      .then((renderedChildViews) => {
-        const collapsedParentView = parentTempView.collapse();
-        return {
-          collapsedParentView,
-          renderedChildViews,
-        };
-      });
+      return parentTempView.collapse();
     });
   }
 
   static renderViewGroup(viewPath, childViews, data) {
-    return ViewFactory._generateCollapsedViewGroup(viewPath, childViews)
-    .then(({collapsedParentView, renderedChildViews}) => {
-      return ViewFactory._renderCollapsedView(collapsedParentView, {
-        content: () => {
-          return renderedChildViews.reduce(
-            (contentString, renderedChildView) => {
-              return contentString += renderedChildView;
-            }, '');
-        },
-        data,
-      });
+    return ViewFactory._generateCollapsedViewGroup(viewPath, childViews, data)
+    .then((collapsedParentView) => {
+      return ViewFactory._renderCollapsedView(collapsedParentView);
     });
   }
 }
