@@ -163,7 +163,7 @@ class Router {
             this._relativePath,
             controllerResponse.templatePath,
             controllerResponse.views,
-            controllerResponse.data);
+            controllerResponse);
         }
 
         return contentPromise.then((content) => {

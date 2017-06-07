@@ -9,6 +9,12 @@ class TestController {
 
   basicview() {
     return {
+      styles: {
+        async: ['/styles/async.css'],
+      },
+      scripts: {
+        async: ['/scripts/async.js'],
+      },
       templatePath: 'templates/view.tmpl',
       views: [
         {
