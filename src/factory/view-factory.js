@@ -6,9 +6,9 @@ const mustache = require('mustache');
 const HopinError = require('../models/HopinError');
 
 class TempView {
-  constructor(fullPath, data) {
+  constructor(fullPath, options) {
     this._fullPath = fullPath;
-    this._data = data;
+    this._options = options;
     this._content = null;
     this._partialPaths = [];
     this._partialContents = {};
@@ -51,6 +51,8 @@ class TempView {
         set: new Set(),
       },
     };
+
+    this.readDataIntoSets(options);
   }
 
   setContent(content) {
@@ -200,8 +202,15 @@ class TempView {
     return this._dataSets;
   }
 
+  get options() {
+    return this._options;
+  }
+
   get data() {
-    return this._data;
+    if (!this._options || !this._options.data) {
+      return null;
+    }
+    return this._options.data;
   }
 }
 
@@ -230,7 +239,7 @@ class ViewFactory {
 
     return Promise.all(childViews.map((childView) => {
       return ViewFactory._createTempView(
-        relativePath, childView.templatePath, childView.views, childView.data);
+        relativePath, childView.templatePath, childView.views, childView);
     }))
     .then((childTempViews) => {
       childTempViews.forEach((childTempView) => {
@@ -241,7 +250,7 @@ class ViewFactory {
     });
   }
 
-  static _createTempView(relativePath, viewPath, childViews, data) {
+  static _createTempView(relativePath, viewPath, childViews, options) {
     let readPath = viewPath;
     if (!path.isAbsolute(viewPath)) {
       readPath = path.join(relativePath, viewPath);
@@ -254,11 +263,10 @@ class ViewFactory {
       return yamlFront.loadFront(fileContents);
     })
     .then((parsedYamlData) => {
-      const tempView = new TempView(readPath, data);
+      const tempView = new TempView(readPath, options);
       tempView.setContent(parsedYamlData.__content.trim());
       tempView.addPartialPaths(parsedYamlData.partials);
       tempView.readDataIntoSets(parsedYamlData);
-
       return ViewFactory._handlePartials(relativePath, tempView);
     })
     .then((tempView) => {
@@ -284,8 +292,8 @@ class ViewFactory {
     );
   }
 
-  static _generateCollapsedViewGroup(relativePath, viewPath, childViews, data) {
-    return ViewFactory._createTempView(relativePath, viewPath, childViews, data)
+  static _generateCollapsedViewGroup(relativePath, viewPath, childViews, options) {
+    return ViewFactory._createTempView(relativePath, viewPath, childViews, options)
     .then((parentTempView) => {
       return parentTempView.collapse();
     });
@@ -321,9 +329,10 @@ class ViewFactory {
     });
   }
 
-  static renderViewGroup(relativePath, viewPath, childViews, data) {
+  static renderViewGroup(relativePath, viewPath, childViews, options) {
+    options = options || {};
     return ViewFactory._generateCollapsedViewGroup(
-      relativePath, viewPath, childViews, data)
+      relativePath, viewPath, childViews, options)
     .then((collapsedParentView) => {
       return ViewFactory._fetchInlineAssets(collapsedParentView);
     })

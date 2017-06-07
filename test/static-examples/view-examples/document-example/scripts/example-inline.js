@@ -1,1 +1,1 @@
-content::scripts/example-inline.js
+console.log('example-inline.js');

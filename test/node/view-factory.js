@@ -84,7 +84,7 @@ describe('ViewFactory', function() {
     const data = {
       hello: 'world',
     };
-    return ViewFactory.renderViewGroup(examplePath, 'view.tmpl', [], data)
+    return ViewFactory.renderViewGroup(examplePath, 'view.tmpl', [], {data})
     .then((renderedView) => {
       expect(renderedView).to.equal(`contents::view-example-1. content::partials-example-1. content::partials-example-2.content::partials-example-3.content::partials-example-4. world`);
     });
@@ -105,7 +105,7 @@ describe('ViewFactory', function() {
 
   it('should be able to collapse a view with child views', function() {
     const examplePath = path.join(__dirname, '../static-examples/view-examples/nested');
-    const viewPath = 'view-group-primary.tmpl';
+    const viewPath = 'view-group-1/view-group-primary.tmpl';
     const childViews = [
       {
         templatePath: 'views/sub-view-1.tmpl',
@@ -122,9 +122,9 @@ describe('ViewFactory', function() {
     return ViewFactory._generateCollapsedViewGroup(examplePath, viewPath, childViews)
     .then((collapsedParentView) => {
       expect(collapsedParentView).to.deep.equal({
-        content: 'contents::view-group-primary.\n{{> ./partials/example-4.tmpl}}\n\n{{{content}}}\n{{ data.hello }}',
+        content: 'contents::view-group-primary.\n{{> ../partials/example-4.tmpl}}\n\n{{{content}}}\n{{ data.hello }}',
         partialContents: {
-          './partials/example-4.tmpl': 'content::partials-example-4.',
+          '../partials/example-4.tmpl': 'content::partials-example-4.',
         },
         styles: {
           inline: [
@@ -212,7 +212,7 @@ describe('ViewFactory', function() {
 
   it('should be able to render a view with child views', function() {
     const examplePath = path.join(__dirname, '../static-examples/view-examples/nested');
-    const viewPath = 'view-group-primary.tmpl';
+    const viewPath = 'view-group-1/view-group-primary.tmpl';
     const childViews = [
       {
         templatePath: 'views/sub-view-1.tmpl',
@@ -229,7 +229,7 @@ describe('ViewFactory', function() {
     const data = {
       hello: 'world',
     };
-    return ViewFactory.renderViewGroup(examplePath, viewPath, childViews, data)
+    return ViewFactory.renderViewGroup(examplePath, viewPath, childViews, {data})
     .then((renderedView) => {
       expect(renderedView).to.equal(`contents::view-group-primary.
 content::partials-example-4.
@@ -240,10 +240,10 @@ world`);
 
   it('should be able to collapse a view with several view groups', function() {
     const examplePath = path.join(__dirname, '../static-examples/view-examples/nested');
-    const viewPath = 'view-group-primary.tmpl';
+    const viewPath = 'view-group-1/view-group-primary.tmpl';
     const childViews = [
       {
-        templatePath: 'view-group-secondary.tmpl',
+        templatePath: 'view-group-2/view-group-secondary.tmpl',
         data: {
           hello: 'second-level',
         },
@@ -265,9 +265,9 @@ world`);
     return ViewFactory._generateCollapsedViewGroup(examplePath, viewPath, childViews)
     .then((collapsedParentView) => {
       expect(collapsedParentView).to.deep.equal({
-        content: 'contents::view-group-primary.\n{{> ./partials/example-4.tmpl}}\n\n{{{content}}}\n{{ data.hello }}',
+        content: 'contents::view-group-primary.\n{{> ../partials/example-4.tmpl}}\n\n{{{content}}}\n{{ data.hello }}',
         partialContents: {
-          './partials/example-4.tmpl': 'content::partials-example-4.',
+          '../partials/example-4.tmpl': 'content::partials-example-4.',
         },
         styles: {
           inline: [
@@ -341,12 +341,12 @@ world`);
         },
         views: [
           {
-            content: 'contents::view-group-secondary.\n{{> ./partials/example-5.tmpl}}\n\n{{{content}}}\n{{ data.hello }}',
+            content: 'contents::view-group-secondary.\n{{> ../partials/example-5.tmpl}}\n\n{{{content}}}\n{{ data.hello }}',
             data: {
               hello: 'second-level',
             },
             partialContents: {
-              './partials/example-5.tmpl': 'content::partials-example-5.',
+              '../partials/example-5.tmpl': 'content::partials-example-5.',
             },
             views: [
               {
@@ -378,10 +378,10 @@ world`);
 
   it('should be able to render a view with several view groups', function() {
     const examplePath = path.join(__dirname, '../static-examples/view-examples/nested');
-    const viewPath = 'view-group-primary.tmpl';
+    const viewPath = 'view-group-1/view-group-primary.tmpl';
     const childViews = [
       {
-        templatePath: 'view-group-secondary.tmpl',
+        templatePath: 'view-group-2/view-group-secondary.tmpl',
         data: {
           hello: 'second-level',
         },
@@ -403,7 +403,7 @@ world`);
     const data = {
       hello: 'world',
     };
-    return ViewFactory.renderViewGroup(examplePath, viewPath, childViews, data)
+    return ViewFactory.renderViewGroup(examplePath, viewPath, childViews, {data})
     .then((renderedView) => {
       expect(renderedView).to.equal(`contents::view-group-primary.
 content::partials-example-4.
@@ -417,18 +417,42 @@ world`);
 
   it('should be able to render the styles and scripts', function() {
     const examplePath = path.join(__dirname, '../static-examples/view-examples/document-example/');
-    return ViewFactory.renderViewGroup(examplePath, 'document.tmpl')
+    return ViewFactory.renderViewGroup(examplePath, 'document.tmpl', null, {
+      styles: {
+        inline: [
+          path.join(examplePath, '/styles/example-direct.css'),
+        ],
+        async: ['/styles/example-direct.css'],
+        sync: ['/styles/example-direct.css'],
+      },
+      scripts: {
+        inline: [
+          path.join(examplePath, '/scripts/example-direct.js'),
+        ],
+        async: ['/scripts/example-direct.js'],
+        sync: ['/scripts/example-direct.js'],
+      },
+    })
     .then((renderedDocument) => {
       expect(renderedDocument).to.equal(
-`<style>content::styles/example-inline.css
+`<style>content::styles/example-direct.css
 </style>
+<style>content::styles/example-inline.css
+</style>
+<link src="/styles/example-direct.css" />
 <link src="/styles/example-sync.css" />
+'/styles/example-direct.css',
 '/styles/example-async.css',
-<script>content::scripts/example-inline.js
+<script>console.log('example-direct.js');
 </script>
+<script>console.log('example-inline.js');
+</script>
+<script src="/scripts/example-direct.js"></script>
 <script src="/scripts/example-sync.js"></script>
+<script src="/scripts/example-direct.js" async defer></script>
 <script src="/scripts/example-async.js" async defer></script>
 `);
     });
   });
+
 });
