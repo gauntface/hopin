@@ -292,8 +292,10 @@ class ViewFactory {
     );
   }
 
-  static _generateCollapsedViewGroup(relativePath, viewPath, childViews, options) {
-    return ViewFactory._createTempView(relativePath, viewPath, childViews, options)
+  static _generateCollapsedViewGroup(
+    relativePath, viewPath, childViews, options) {
+    return ViewFactory._createTempView(
+      relativePath, viewPath, childViews, options)
     .then((parentTempView) => {
       return parentTempView.collapse();
     });
