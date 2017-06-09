@@ -1,5 +1,5 @@
 const path = require('path');
-const fsExtra = require('fs-extra');
+const fs = require('mz/fs');
 const yamlFront = require('yaml-front-matter');
 const mustache = require('mustache');
 
@@ -255,7 +255,7 @@ class ViewFactory {
     if (!path.isAbsolute(viewPath)) {
       readPath = path.join(relativePath, viewPath);
     }
-    return fsExtra.readFile(readPath)
+    return fs.readFile(readPath)
     .then((fileContentsBuffer) => {
       return fileContentsBuffer.toString();
     })
@@ -307,7 +307,7 @@ class ViewFactory {
 
     const inlineStylesPromise = Promise.all(
       inlineStylesPaths.map((inlinePath) => {
-        return fsExtra.readFile(inlinePath)
+        return fs.readFile(inlinePath)
         .then((content) => {
           return content.toString();
         });
@@ -316,7 +316,7 @@ class ViewFactory {
 
     const inlineScriptsPromise = Promise.all(
       inlineScriptPaths.map((inlinePath) => {
-        return fsExtra.readFile(inlinePath)
+        return fs.readFile(inlinePath)
         .then((content) => {
           return content.toString();
         });
