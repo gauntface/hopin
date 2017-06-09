@@ -12,6 +12,9 @@
   <a href="https://david-dm.org/gauntface/hopin?type=dev">
     <img src="https://david-dm.org/gauntface/hopin/dev-status.svg" alt="NPM Dev Dependency State" />
   </a>
+  <a href="https://greenkeeper.io/">
+    <img src="https://badges.greenkeeper.io/gauntface/hopin.svg" alt="Greenkeeper Badge" />
+  </a>
 </p>
 
 Personal Express framework for building https://gauntface.com/

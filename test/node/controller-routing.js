@@ -126,7 +126,7 @@ describe('Controller Router.route()', function() {
     });
     return router.route('/')
     .then(() => {
-      if(homeController.indexCount !== 1) {
+      if (homeController.indexCount !== 1) {
         throw new Error('Expected home controllers index function to be called');
       }
       if (homeController.lastType !== 'html') {
@@ -141,7 +141,7 @@ describe('Controller Router.route()', function() {
     });
     return router.route('/example')
     .then(() => {
-      if(exampleController.indexCount !== 1) {
+      if (exampleController.indexCount !== 1) {
         throw new Error('Expected example controllers index function to be called');
       }
       if (exampleController.lastType !== 'html') {
@@ -156,7 +156,7 @@ describe('Controller Router.route()', function() {
     });
     return router.route('/example/demo')
     .then(() => {
-      if(exampleController.demoCount !== 1) {
+      if (exampleController.demoCount !== 1) {
         throw new Error('Expected example controllers demo function to be called');
       }
       if (exampleController.lastType !== 'html') {
@@ -171,7 +171,7 @@ describe('Controller Router.route()', function() {
     });
     return router.route('/example/demo.json')
     .then(() => {
-      if(exampleController.demoCount !== 1) {
+      if (exampleController.demoCount !== 1) {
         throw new Error('Expected example controllers demo function to be called');
       }
       if (exampleController.lastType !== 'json') {
@@ -186,7 +186,7 @@ describe('Controller Router.route()', function() {
     });
     return router.route('/bad-controller')
     .then(() => {
-      if(errorController.indexCount !== 1) {
+      if (errorController.indexCount !== 1) {
         throw new Error('Expected error controllers index function to be called');
       }
       if (errorController.lastType !== 'html') {
@@ -255,10 +255,10 @@ describe('Controller Router.route()', function() {
 
     return router.route('/')
     .then(() => {
-      if(overrideController.testCount !== 1) {
+      if (overrideController.testCount !== 1) {
         throw new Error('Expected override controllers test function to be called');
       }
-      if(overrideController.indexCount !== 0) {
+      if (overrideController.indexCount !== 0) {
         throw new Error('Expected override controllers index function to be zero');
       }
       if (overrideController.lastType !== 'html') {
@@ -280,10 +280,10 @@ describe('Controller Router.route()', function() {
 
     return router.route('/')
     .then(() => {
-      if(overrideController.testCount !== 0) {
+      if (overrideController.testCount !== 0) {
         throw new Error('Expected override controllers test function to be 0');
       }
-      if(overrideController.indexCount !== 1) {
+      if (overrideController.indexCount !== 1) {
         throw new Error('Expected override controllers index function to be called');
       }
       if (overrideController.lastType !== 'html') {
@@ -304,10 +304,10 @@ describe('Controller Router.route()', function() {
     });
     return router.route('/example/test')
     .then(() => {
-      if(overrideController.testCount !== 1) {
+      if (overrideController.testCount !== 1) {
         throw new Error('Expected override controllers test function to be 0');
       }
-      if(overrideController.indexCount !== 0) {
+      if (overrideController.indexCount !== 0) {
         throw new Error('Expected override controllers index function to be called');
       }
       if (overrideController.lastType !== 'html') {
@@ -328,10 +328,10 @@ describe('Controller Router.route()', function() {
     });
     return router.route('/example/test.json')
     .then(() => {
-      if(overrideController.testCount !== 1) {
+      if (overrideController.testCount !== 1) {
         throw new Error('Expected override controllers test function to be 0');
       }
-      if(overrideController.indexCount !== 0) {
+      if (overrideController.indexCount !== 0) {
         throw new Error('Expected override controllers index function to be called');
       }
       if (overrideController.lastType !== 'json') {
@@ -352,10 +352,10 @@ describe('Controller Router.route()', function() {
     });
     return router.route('/example/test.json')
     .then(() => {
-      if(overrideController.testCount !== 1) {
+      if (overrideController.testCount !== 1) {
         throw new Error('Expected override controllers test function to be 0');
       }
-      if(overrideController.indexCount !== 0) {
+      if (overrideController.indexCount !== 0) {
         throw new Error('Expected override controllers index function to be called');
       }
       if (overrideController.lastType !== 'json') {

@@ -3,7 +3,6 @@ const fs = require('mz/fs');
 const express = require('express');
 const pathToRegex = require('path-to-regexp');
 
-// const TemplateManager = require('./TemplateManager');
 const ViewFactory = require('../factory/view-factory');
 const HopinError = require('../models/HopinError');
 const parseUrl = require('../utils/parse-url');
@@ -19,7 +18,6 @@ const DEFAULT_TYPES = {
 class Router {
   constructor({relativePath}) {
     this._relativePath = relativePath;
-    // this._templateManager = new TemplateManager({relativePath});
     this._customRoutes = this._getCustomRoutes(this._relativePath);
     this._customTypes = this._getCustomTypes(this._relativePath);
 
@@ -151,14 +149,9 @@ class Router {
         let contentPromise;
         if (typeof controllerResponse === 'string') {
           contentPromise = Promise.resolve(controllerResponse);
-        } else if(controllerResponse.content) {
+        } else if (controllerResponse.content) {
           contentPromise = Promise.resolve(controllerResponse.content);
         } else {
-          // TODO: Replace this with ViewFactory.
-          /** contentPromise = this._templateManager.render(
-            args.controllerResponse
-          );**/
-
           contentPromise = ViewFactory.renderViewGroup(
             this._relativePath,
             controllerResponse.templatePath,

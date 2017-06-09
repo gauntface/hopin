@@ -34,10 +34,10 @@
     "yaml-front-matter": "^3.4.0"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "chai": "^4.0.2",
     "clear-require": "^2.0.0",
     "eslint": "^3.18.0",
-    "eslint-config-google": "^0.7.1",
+    "eslint-config-google": "^0.8.0",
     "mocha": "^3.2.0",
     "node-fetch": "^1.6.3",
     "proxyquire": "^1.7.11"

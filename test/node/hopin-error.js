@@ -3,7 +3,7 @@ const HopinError = require('../../src/models/HopinError');
 describe('Test HopinError Generation', function() {
   it('should be able to generate error with unknown id', function() {
     const error = new HopinError('aaa123');
-    error.stack.should.be.defined;
+    error.stack.should.exist;
     error.name.should.equal('unknown-error');
     error.message.should.equal('An unknown error was thrown with name: \'aaa123\'.');
   });
