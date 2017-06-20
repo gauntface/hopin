@@ -14,6 +14,10 @@ class TempView {
     this._partialContents = {};
     this._tempViews = [];
     this._dataSets = {
+      'styles-raw': {
+        dataStructure: ['styles', 'raw'],
+        set: new Set(),
+      },
       'styles-inline': {
         dataStructure: ['styles', 'inline'],
         set: new Set(),
@@ -30,6 +34,10 @@ class TempView {
       },
       'styles-async': {
         dataStructure: ['styles', 'async'],
+        set: new Set(),
+      },
+      'scripts-raw': {
+        dataStructure: ['scripts', 'raw'],
         set: new Set(),
       },
       'scripts-inline': {

@@ -17,6 +17,7 @@ describe('ViewFactory', function() {
           './example-4.tmpl': 'content::partials-example-4.',
         },
         styles: {
+          raw: [],
           inline: [
             path.join(examplePath, '/styles/example-1.css'),
             path.join(examplePath, '/styles/example-2.css'),
@@ -46,6 +47,7 @@ describe('ViewFactory', function() {
           ],
         },
         scripts: {
+          raw: [],
           inline: [
             path.join(examplePath, '/scripts/example-1.js'),
             path.join(examplePath, '/scripts/example-2.js'),
@@ -127,6 +129,7 @@ describe('ViewFactory', function() {
           '../partials/example-4.tmpl': 'content::partials-example-4.',
         },
         styles: {
+          raw: [],
           inline: [
             path.join(examplePath, '/styles/example-1.css'),
             path.join(examplePath, '/styles/example-2.css'),
@@ -156,6 +159,7 @@ describe('ViewFactory', function() {
           ],
         },
         scripts: {
+          raw: [],
           inline: [
             path.join(examplePath, '/scripts/example-1.js'),
             path.join(examplePath, '/scripts/example-2.js'),
@@ -270,6 +274,7 @@ world`);
           '../partials/example-4.tmpl': 'content::partials-example-4.',
         },
         styles: {
+          raw: [],
           inline: [
             path.join(examplePath, '/styles/example-1.css'),
             path.join(examplePath, '/styles/example-2.css'),
@@ -305,6 +310,7 @@ world`);
           ],
         },
         scripts: {
+          raw: [],
           inline: [
             path.join(examplePath, '/scripts/example-1.js'),
             path.join(examplePath, '/scripts/example-2.js'),
