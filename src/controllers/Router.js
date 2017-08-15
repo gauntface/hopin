@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('mz/fs');
 const express = require('express');
 const pathToRegex = require('path-to-regexp');
+const minifyHTML = require('html-minifier').minify;
 
 const ViewFactory = require('../factory/view-factory');
 const HopinError = require('../models/HopinError');
@@ -171,6 +172,16 @@ class Router {
           res.set('Content-Type', this._customTypes[renderedContent.type]);
         } else if (DEFAULT_TYPES[renderedContent.type]) {
           res.set('Content-Type', DEFAULT_TYPES[renderedContent.type]);
+        }
+        if (renderedContent.type === 'html') {
+          try {
+            renderedContent.content = minifyHTML(renderedContent.content, {
+              collapseWhitespace: true,
+              removeComments: true,
+            });
+          } catch (err) {
+            // NOOP
+          }
         }
         res.send(renderedContent.content);
       })

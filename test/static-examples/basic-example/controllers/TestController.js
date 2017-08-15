@@ -34,6 +34,12 @@ class TestController {
       ],
     };
   }
+
+  minifyhtml() {
+    return {
+      templatePath: 'templates/minify-html.tmpl',
+    };
+  }
 }
 
 module.exports = new TestController();
