@@ -12,8 +12,8 @@ class Hopin {
     this._server = null;
 
     this._router = new Router({
-      relativePath,
-      publicPath,
+      relativePath: this._relativePath,
+      publicPath: this._publicPath,
     });
   }
 
