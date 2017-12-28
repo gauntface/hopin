@@ -4,17 +4,21 @@ const path = require('path');
 const Router = require('./controllers/Router');
 
 class Hopin {
-  constructor({relativePath}) {
+  constructor({relativePath, publicPath = 'public'}) {
     this._relativePath = relativePath;
+    this._publicPath = path.join(relativePath, publicPath);
 
     this._app = express();
     this._server = null;
 
-    this._router = new Router({relativePath});
+    this._router = new Router({
+      relativePath,
+      publicPath,
+    });
   }
 
   startServer(port) {
-    this._app.use(express.static(path.join(this._relativePath, 'public')));
+    this._app.use(express.static(this._publicPath));
 
     this._app.use('/', this._router.routes);
 

@@ -1,5 +1,5 @@
 const path = require('path');
-const fs = require('mz/fs');
+const fs = require('fs-extra');
 const express = require('express');
 const pathToRegex = require('path-to-regexp');
 const minifyHTML = require('html-minifier').minify;
@@ -17,8 +17,9 @@ const DEFAULT_TYPES = {
 };
 
 class Router {
-  constructor({relativePath}) {
+  constructor({relativePath, publicPath}) {
     this._relativePath = relativePath;
+    this._publicPath = publicPath;
     this._customRoutes = this._getCustomRoutes(this._relativePath);
     this._customTypes = this._getCustomTypes(this._relativePath);
 
@@ -155,6 +156,7 @@ class Router {
         } else {
           contentPromise = ViewFactory.renderViewGroup(
             this._relativePath,
+            this._publicPath,
             controllerResponse.templatePath,
             controllerResponse.views,
             controllerResponse);

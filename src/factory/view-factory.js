@@ -1,7 +1,8 @@
 const path = require('path');
-const fs = require('mz/fs');
+const fs = require('fs-extra');
 const yamlFront = require('yaml-front-matter');
 const mustache = require('mustache');
+const crypto = require('crypto');
 
 const HopinError = require('../models/HopinError');
 
@@ -143,7 +144,7 @@ class TempView {
     });
   }
 
-  collapse() {
+  collapse(publicPath) {
     const collapsedObject = {};
     collapsedObject.content = this.content;
     collapsedObject.partialContents = this._partialContents;
@@ -165,14 +166,39 @@ class TempView {
         } else if (!objectToAlter[structureSegment]) {
           objectToAlter[structureSegment] = {};
         }
-
         return objectToAlter[structureSegment];
       }, collapsedObject);
     });
 
+    const revisionMapFunc = (assetPath) => {
+      const filePath = path.join(publicPath, assetPath);
+      if (fs.existsSync(filePath)) {
+        const contents = fs.readFileSync(path.join(publicPath, assetPath));
+        const hash = crypto.createHash('md5')
+          .update(contents).digest('hex').substring(0, 8);
+        const extension = path.extname(filePath);
+        const revisionedUrl = path.join(
+          path.dirname(assetPath),
+          `${path.basename(assetPath, extension)}.${hash}${extension}`
+        );
+        return revisionedUrl;
+      }
+      return assetPath;
+    };
+
+    collapsedObject.scripts.sync =
+      collapsedObject.scripts.sync.map(revisionMapFunc);
+    collapsedObject.scripts.async =
+      collapsedObject.scripts.async.map(revisionMapFunc);
+
+    collapsedObject.styles.sync =
+      collapsedObject.styles.sync.map(revisionMapFunc);
+    collapsedObject.styles.async =
+      collapsedObject.styles.async.map(revisionMapFunc);
+
     collapsedObject.views = [];
     this._tempViews.forEach((tempView) => {
-      const tempViewCollapsed = tempView.collapse();
+      const tempViewCollapsed = tempView.collapse(publicPath);
 
       const childView = {
         content: tempViewCollapsed.content,
@@ -301,11 +327,11 @@ class ViewFactory {
   }
 
   static _generateCollapsedViewGroup(
-    relativePath, viewPath, childViews, options) {
+    relativePath, publicPath, viewPath, childViews, options) {
     return ViewFactory._createTempView(
       relativePath, viewPath, childViews, options)
     .then((parentTempView) => {
-      return parentTempView.collapse();
+      return parentTempView.collapse(publicPath);
     });
   }
 
@@ -339,10 +365,11 @@ class ViewFactory {
     });
   }
 
-  static renderViewGroup(relativePath, viewPath, childViews, options) {
+  static renderViewGroup(
+    relativePath, publicPath, viewPath, childViews, options) {
     options = options || {};
     return ViewFactory._generateCollapsedViewGroup(
-      relativePath, viewPath, childViews, options)
+      relativePath, publicPath, viewPath, childViews, options)
     .then((collapsedParentView) => {
       return ViewFactory._fetchInlineAssets(collapsedParentView);
     })

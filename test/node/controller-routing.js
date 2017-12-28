@@ -73,7 +73,7 @@ describe('Controller Router.route()', function() {
   const overrideControllerPath = path.join(__dirname, 'controllers', 'OverrideController.js');
 
   const proxyquireInputs = {};
-  proxyquireInputs['mz/fs'] = {
+  proxyquireInputs['fs-extra'] = {
     exists: (filePath) => {
       if (filePath === exampleControllerPath) {
         return Promise.resolve(true);
