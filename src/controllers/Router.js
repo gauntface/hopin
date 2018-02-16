@@ -64,7 +64,7 @@ class Router {
     return configContents;
   }
 
-  route(requestUrl, request) {
+  route(requestUrl, request, response) {
     const filteredUrl = this._handleCustomRoutes(requestUrl);
     const parsedUrl = parseUrl(filteredUrl);
 
@@ -84,10 +84,20 @@ class Router {
             }));
           }
 
-          return matchingController['index']({request, type, urlSegments});
+          return matchingController['index']({
+            request,
+            response,
+            type,
+            urlSegments,
+          });
         });
       }
-      return matchingController[action]({request, type, urlSegments});
+      return matchingController[action]({
+        request,
+        response,
+        type,
+        urlSegments,
+      });
     })
     .then((controllerResponse) => {
       return {
@@ -144,7 +154,7 @@ class Router {
 
   _addDefaultRoutes() {
     this._expressRouter.all('*', (req, res, next) => {
-      return this.route(req.url, req)
+      return this.route(req.url, req, res)
       .then((args) => {
         const controllerResponse = args.controllerResponse;
 
