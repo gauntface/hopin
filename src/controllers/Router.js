@@ -180,6 +180,11 @@ class Router {
         });
       })
       .then((renderedContent) => {
+        if (res.headersSent) {
+          // Headers already sent so there is nothin more we can do.
+          return;
+        }
+
         if (this._customTypes[renderedContent.type]) {
           res.set('Content-Type', this._customTypes[renderedContent.type]);
         } else if (DEFAULT_TYPES[renderedContent.type]) {
@@ -198,6 +203,11 @@ class Router {
         res.send(renderedContent.content);
       })
       .catch((err) => {
+        if (res.headersSent) {
+          // Headers already sent so there is nothin more we can do.
+          return;
+        }
+
         res.status(404).send(err.message);
       });
     });
