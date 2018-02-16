@@ -1,4 +1,5 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 
 const Router = require('./controllers/Router');
@@ -9,6 +10,7 @@ class Hopin {
     this._publicPath = path.join(relativePath, publicPath);
 
     this._app = express();
+
     this._server = null;
 
     this._router = new Router({
@@ -18,6 +20,8 @@ class Hopin {
   }
 
   startServer(port) {
+    this._app.use(cookieParser());
+
     this._app.use(express.static(this._publicPath));
 
     this._app.use('/', this._router.routes);
