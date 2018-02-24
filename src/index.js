@@ -1,5 +1,6 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
 const path = require('path');
 
 const Router = require('./controllers/Router');
@@ -21,6 +22,7 @@ class Hopin {
 
   startServer(port) {
     this._app.use(cookieParser());
+    this._app.use(bodyParser.json());
 
     this._app.use(express.static(this._publicPath));
 
