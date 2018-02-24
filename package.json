@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/gauntface/hopin#readme",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "chalk": "^2.0.0",
     "cookie-parser": "^1.4.3",
     "express": "^4.15.2",
